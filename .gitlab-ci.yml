@@ -1,0 +1,10 @@
+stages:
+  - build
+
+release:
+  stage: build
+  script:
+    - make release
+  artifacts:
+    paths:
+      - ./release/LethalMod.dll
