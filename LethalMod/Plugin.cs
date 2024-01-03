@@ -15,9 +15,9 @@ namespace LethalMod
         void Start()
         {
             agent = GetComponent<NavMeshAgent>();
-            agent.updatePosition(false);
-            agent.updateRotation(false);
-            agent.updateUpAxis(false);
+            agent.updatePosition = false;
+            agent.updateRotation = false;
+            agent.updateUpAxis = false;
         }
 
         public Vector3[] GetPath(Vector3 target)
