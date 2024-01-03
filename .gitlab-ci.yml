@@ -3,8 +3,9 @@ stages:
 
 release:
   stage: build
+  image: mcr.microsoft.com/dotnet/sdk:latest
   script:
-    - make release
+    - dotnet build -o release -c Release /app/LethalMod.sln
   artifacts:
     paths:
       - ./release/LethalMod.dll
