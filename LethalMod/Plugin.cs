@@ -10,10 +10,19 @@ namespace LethalMod
     [RequireComponent(typeof(NavMeshAgent))]
     public class PathFinder : MonoBehaviour
     {
+        NavMeshAgent agent;
+
+        void Start()
+        {
+            agent = GetComponent<NavMeshAgent>();
+            agent.updatePosition(false);
+            agent.updateRotation(false);
+            agent.updateUpAxis(false);
+        }
+
         public Vector3[] GetPath(Vector3 target)
         {
             var path = new NavMeshPath();
-            var agent = GetComponent<NavMeshAgent>();
             //agent.transform.position = start;
             // agent.enabled = false;
             // agent.isStopped = true;
