@@ -48,8 +48,8 @@ namespace LethalMod
             foreach (var entry in entries)
             {
                 var mesh = entry.gameObject.GetComponent<Collider>();
-                var tmp = (transform.position.z - mesh.bounds.size.z)/2;
-                var pos = new Vector3(entry.transform.position.x, entry.transform.position.y, tmp);
+                var tmp = (transform.position.y - mesh.bounds.size.y)/2;
+                var pos = new Vector3(entry.transform.position.x, tmp, entry.transform.position.z);
                 esp(pos, Color.blue, entry.transform.name);
             }
 
