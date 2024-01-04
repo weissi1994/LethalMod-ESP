@@ -157,17 +157,18 @@ namespace LethalMod
         {
             Vector3 screen_pos;
             Vector3 screen_end_pos = world_to_screen(end);
-            Logger.LogInfo($"Found {path.Length} waypoints");
-            if (path.Length > 0) {
-                Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
+            if (path.Length > 1) {
+                Logger.LogInfo($"Found {path.Length} waypoints");
+                Vector2 previous = new Vector2(path[0].x, path[0].y);
                 Vector2 next;
-                for (int i = 0; i < path.Length - 1; i++) {
+                for (int i = 1; i < path.Length - 1; i++) {
                     Logger.LogInfo($"    {i}. {path[i].x} {path[i].y}");
                     screen_pos = world_to_screen(path[i]);
                     next = new Vector2(screen_pos.x, screen_pos.y);
                     render.draw_line(previous, next, color, width);
                     previous = next;
                 }
+                Logger.LogInfo($"    end {end.x} {end.y}");
                 render.draw_line(previous, new Vector2(screen_end_pos.x, screen_end_pos.y), color, width);
             }
         }
