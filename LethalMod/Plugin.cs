@@ -24,18 +24,6 @@ namespace LethalMod
         {
             var path = new NavMeshPath();
             agent.CalculatePath(target, path);
-            switch (path.status)
-            {
-                case NavMeshPathStatus.PathComplete:
-                    Debug.Log($"will be able to reach.");
-                    break;
-                case NavMeshPathStatus.PathPartial:
-                    Debug.LogWarning($" will only be able to move partway.");
-                    break;
-                default:
-                    Debug.LogError($"There is no valid path to reach.");
-                    break;
-            }
             return path.corners;
         }
     }
@@ -170,13 +158,11 @@ namespace LethalMod
             Vector3 screen_pos;
             Vector3 screen_end_pos = world_to_screen(end);
             Logger.LogInfo($"Found {path.Length} waypoints");
-            if (path.Length == 0) {
-                render.draw_line(new Vector2(Screen.width / 2, Screen.height),
-                new Vector2(screen_end_pos.x, screen_end_pos.y), color, 2f);
-            } else {
+            if (path.Length > 0) {
                 Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
                 Vector2 next;
                 for (int i = 0; i < path.Length - 1; i++) {
+                    Logger.LogInfo($"    {i}. {path[i].x} {path[i].y}");
                     screen_pos = world_to_screen(path[i]);
                     next = new Vector2(screen_pos.x, screen_pos.y);
                     render.draw_line(previous, next, color, width);
