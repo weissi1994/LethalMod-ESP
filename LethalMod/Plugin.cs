@@ -93,9 +93,9 @@ namespace LethalMod
                 local_player = HUDManager.Instance?.localPlayer;
                 if (local_player != null) {
                     camera = local_player.gameplayCamera;
-                    if (local_player.thisPlayerBody.gameObject.GetComponent<PathFinder>() == null) {
+                    if (camera.gameObject.GetComponent<PathFinder>() == null) {
                         Logger.LogWarning($"Attaching PathFinder to local player");
-                        local_player.thisPlayerBody.gameObject.AddComponent<PathFinder>(); 
+                        camera.gameObject.AddComponent<PathFinder>(); 
                     }
                     // if (NavMesh.SamplePosition(local_player.transform.position, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
                     //     if (camera.gameObject.GetComponent<NavMeshAgent>() == null) {
@@ -163,7 +163,7 @@ namespace LethalMod
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height,
                 color, box_thickness);
-                local_player.thisPlayerBody.GetComponent<PathFinder>().DrawPath(entity_position, color);
+                camera.gameObject.GetComponent<PathFinder>().DrawPath(entity_position, color);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
             }
