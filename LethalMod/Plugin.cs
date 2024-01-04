@@ -47,7 +47,10 @@ namespace LethalMod
 
             foreach (var entry in entries)
             {
-                esp(entry.transform.position, Color.blue, entry.transform.name);
+                var mesh = entry.gameObject.GetComponent<Collider>();
+                var tmp = (transform.position.z - mesh.bounds.size.z)/2;
+                var pos = new Vector3(entry.transform.position.x, entry.transform.position.y, tmp);
+                esp(pos, Color.blue, entry.transform.name);
             }
 
         }
@@ -146,6 +149,8 @@ namespace LethalMod
               render.draw_line(previous, next, color, width);
               previous = next;
           }
+          Vector3 end_pos = world_to_screen(target);
+          render.draw_line(previous, end_pos, color, width);
         }
     }
 
