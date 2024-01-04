@@ -24,31 +24,24 @@ namespace LethalMod
         {
             var path = new NavMeshPath();
             agent.nextPosition = start;
-            if (NavMesh.SamplePosition(start, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
-                agent.CalculatePath(target, path);
-                var line = this.GetComponent<LineRenderer>();
-                if( line == null )
-                {
-                  line = this.gameObject.AddComponent<LineRenderer>();
-                  line.material = new Material( Shader.Find( "Sprites/Default" ) ) { color = color };
-                  line.SetWidth( 0.5f, 0.5f );
-                  line.SetColors( color, color );
-                }
-
-                line.SetVertexCount( path.corners.Length );
-
-                for( int i = 0; i < path.corners.Length; i++ )
-                {
-                  line.SetPosition( i, path.corners[ i ] );
-                }
-
-                return path.corners;
-            }
-            else
+            agent.CalculatePath(target, path);
+            var line = this.GetComponent<LineRenderer>();
+            if( line == null )
             {
-                Debug.Log("No valid NavMesh found. Make sure a NavMesh is baked in the scene.");
-                return [];
+              line = this.gameObject.AddComponent<LineRenderer>();
+              line.material = new Material( Shader.Find( "Sprites/Default" ) ) { color = color };
+              line.SetWidth( 0.5f, 0.5f );
+              line.SetColors( color, color );
             }
+
+            line.SetVertexCount( path.corners.Length );
+
+            for( int i = 0; i < path.corners.Length; i++ )
+            {
+              line.SetPosition( i, path.corners[ i ] );
+            }
+
+            return path.corners;
         }
     }
 
@@ -171,7 +164,7 @@ namespace LethalMod
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height,
                 color, box_thickness);
-                local_player.thisPlayerBody.gameObject.GetComponent<PathFinder>().DrawPath(camera.transform.position, entity_position, color);
+                local_player.thisPlayerBody.gameObject.GetComponent<PathFinder>().DrawPath(local_player.thisPlayerBody.transform.position, entity_position, color);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
             }
