@@ -24,7 +24,7 @@ namespace LethalMod
         {
             var path = new NavMeshPath();
             agent.nextPosition = start;
-            if (NavMesh.SamplePosition(local_player.transform.position, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
+            if (NavMesh.SamplePosition(start, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
                 agent.CalculatePath(target, path);
                 var line = this.GetComponent<LineRenderer>();
                 if( line == null )
@@ -46,8 +46,8 @@ namespace LethalMod
             }
             else
             {
-                Debug.LogDebug("No valid NavMesh found. Make sure a NavMesh is baked in the scene.");
-                return new Vector3[];
+                Debug.Log("No valid NavMesh found. Make sure a NavMesh is baked in the scene.");
+                return [];
             }
         }
     }
@@ -101,9 +101,9 @@ namespace LethalMod
                 local_player = HUDManager.Instance?.localPlayer;
                 if (local_player != null) {
                     camera = local_player.gameplayCamera;
-                    if (camera.gameObject.GetComponent<PathFinder>() == null) {
+                    if (local_player.GetComponent<PathFinder>() == null) {
                         Logger.LogWarning($"Attaching PathFinder to local player");
-                        camera.gameObject.AddComponent<PathFinder>(); 
+                        local_player.AddComponent<PathFinder>(); 
                     }
                     // if (NavMesh.SamplePosition(local_player.transform.position, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
                     //     if (camera.gameObject.GetComponent<NavMeshAgent>() == null) {
@@ -171,7 +171,7 @@ namespace LethalMod
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height,
                 color, box_thickness);
-                camera.gameObject.GetComponent<PathFinder>().DrawPath(camera.transform.position, entity_position, color);
+                local_player.GetComponent<PathFinder>().DrawPath(camera.transform.position, entity_position, color);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
             }
