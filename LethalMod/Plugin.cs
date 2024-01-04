@@ -20,9 +20,12 @@ namespace LethalMod
             agent.updateUpAxis = false;
         }
 
-        public void DrawPath(Vector3 start, Vector3 target, Color color)
+        public Vector3[] DrawPath(Vector3 start, Vector3 target, Color color)
         {
             var path = new NavMeshPath();
+            if (agent.isOnNavMesh == false) {
+              agent.Warp(start);
+            }
             agent.nextPosition = start;
             agent.CalculatePath(target, path);
             var line = this.GetComponent<LineRenderer>();
@@ -41,7 +44,9 @@ namespace LethalMod
               line.SetPosition( i, path.corners[ i ] );
             }
 
-            Destroy(this);
+            Debug.Log($"Found {path.corners.Length} waypoints");
+
+            return path.corners;
         }
     }
 
@@ -94,6 +99,10 @@ namespace LethalMod
                 local_player = HUDManager.Instance?.localPlayer;
                 if (local_player != null) {
                     camera = local_player.gameplayCamera;
+                    if (camera.gameObject.GetComponent<PathFinder>() == null) {
+                        Logger.LogWarning($"Attaching PathFinder to local player");
+                        camera.gameObject.AddComponent<PathFinder>(); 
+                    }
                     // if (NavMesh.SamplePosition(local_player.transform.position, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
                     //     if (camera.gameObject.GetComponent<NavMeshAgent>() == null) {
                     //         Logger.LogWarning($"Attaching NavMeshAgent to local player");
@@ -160,10 +169,6 @@ namespace LethalMod
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height,
                 color, box_thickness);
-                if (camera.gameObject.GetComponent<PathFinder>() == null) {
-                    Logger.LogWarning($"Attaching PathFinder to local player");
-                    camera.gameObject.AddComponent<PathFinder>(); 
-                }
                 camera.gameObject.GetComponent<PathFinder>().DrawPath(camera.transform.position, entity_position, color);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
