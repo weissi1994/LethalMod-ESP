@@ -10,6 +10,6 @@ release: clean
 package: release
 	cp ./release/LethalMod.dll .
 	cp ./LethalMod/Plugin.cs Source.cs
-	zip release.zip ./icon.png ./README.md ./manifest.json ./LethalMod.dll ./Source.cs
+	nix-shell -p zip --run 'zip release.zip ./icon.png ./README.md ./manifest.json ./LethalMod.dll ./Source.cs'
 	rm ./LethalMod.dll
 	rm ./Source.cs
