@@ -20,10 +20,26 @@ namespace LethalMod
             agent.updateUpAxis = false;
         }
 
-        public Vector3[] GetPath(Vector3 target)
+        public Vector3[] DrawPath(Vector3 target, Color color)
         {
             var path = new NavMeshPath();
             agent.CalculatePath(target, path);
+            var line = this.GetComponent<LineRenderer>();
+            if( line == null )
+            {
+              line = this.gameObject.AddComponent<LineRenderer>();
+              line.material = new Material( Shader.Find( "Sprites/Default" ) ) { color = color };
+              line.SetWidth( 0.5f, 0.5f );
+              line.SetColors( color, color );
+            }
+
+            line.SetVertexCount( path.corners.Length );
+
+            for( int i = 0; i < path.corners.Length; i++ )
+            {
+              line.SetPosition( i, path.corners[ i ] );
+            }
+
             return path.corners;
         }
     }
@@ -147,29 +163,9 @@ namespace LethalMod
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height,
                 color, box_thickness);
-                draw_path(local_player.thisPlayerBody.GetComponent<PathFinder>().GetPath(entity_position), entity_position, color, 2f);
+                local_player.thisPlayerBody.GetComponent<PathFinder>().DrawPath(entity_position, color);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
-            }
-        }
-
-        private void draw_path(Vector3[] path, Vector3 end, Color color, float width)
-        {
-            Vector3 screen_pos;
-            Vector3 screen_end_pos = world_to_screen(end);
-            if (path.Length > 1) {
-                Logger.LogInfo($"Found {path.Length} waypoints");
-                Vector2 previous = new Vector2(path[0].x, path[0].y);
-                Vector2 next;
-                for (int i = 1; i < path.Length - 1; i++) {
-                    Logger.LogInfo($"    {i}. {path[i].x} {path[i].y}");
-                    screen_pos = world_to_screen(path[i]);
-                    next = new Vector2(screen_pos.x, screen_pos.y);
-                    render.draw_line(previous, next, color, width);
-                    previous = next;
-                }
-                Logger.LogInfo($"    end {end.x} {end.y}");
-                render.draw_line(previous, new Vector2(screen_end_pos.x, screen_end_pos.y), color, width);
             }
         }
     }
