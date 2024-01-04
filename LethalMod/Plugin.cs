@@ -47,7 +47,9 @@ namespace LethalMod
 
             foreach (var entry in entries)
             {
-                esp(entry.transform.position, Color.blue, entry.transform.name);
+                var tmp = entry.transform.position;
+                tmp.y = tmp.y - 1;
+                esp(tmp, Color.blue, entry.transform.name);
             }
 
         }
@@ -138,17 +140,32 @@ namespace LethalMod
           agent.enabled = false;
           agent.enabled = true;
           agent.CalculatePath(target, path);
-          if (path.Length > 0) {
-              Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
-              Vector2 next;
-              for (int i = 0; i < path.corners.Length - 1; i++) {
-                  var screen_pos = world_to_screen(path.corners[i]);
-                  next = new Vector2(screen_pos.x, screen_pos.y);
-                  render.draw_line(previous, next, color, width);
-                  previous = next;
-              }
-              Vector3 end_pos = world_to_screen(target);
-              render.draw_line(previous, end_pos, color, width);
+          Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
+          Vector2 next;
+          switch (path.status)
+          {
+              case NavMeshPathStatus.PathComplete:
+                  for (int i = 0; i < path.corners.Length - 1; i++) {
+                      var screen_pos = world_to_screen(path.corners[i]);
+                      next = new Vector2(screen_pos.x, screen_pos.y);
+                      render.draw_line(previous, next, color, width);
+                      previous = next;
+                  }
+                  Vector3 end_pos = world_to_screen(target);
+                  render.draw_line(previous, end_pos, color, width);
+                  break;
+              case NavMeshPathStatus.PathPartial:
+                  Debug.LogWarning($"will only be able to move partway");
+                  for (int i = 0; i < path.corners.Length - 1; i++) {
+                      var screen_pos = world_to_screen(path.corners[i]);
+                      next = new Vector2(screen_pos.x, screen_pos.y);
+                      render.draw_line(previous, next, Color.yellow, width);
+                      previous = next;
+                  }
+                  break;
+              default:
+                  Debug.LogError($"There is no valid path to reach.");
+                  break;
           }
         }
     }
