@@ -138,7 +138,6 @@ namespace LethalMod
           agent.enabled = false;
           agent.enabled = true;
           agent.CalculatePath(target, path);
-          Logger.LogInfo($"Found {path.corners.Length} waypoints");
           Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
           Vector2 next;
           for (int i = 0; i < path.corners.Length - 1; i++) {
