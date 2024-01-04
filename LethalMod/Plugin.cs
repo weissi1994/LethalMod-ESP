@@ -7,49 +7,6 @@ using System.IO;
 
 namespace LethalMod
 {
-    [RequireComponent(typeof(NavMeshAgent))]
-    public class PathFinder : MonoBehaviour
-    {
-        NavMeshAgent agent;
-
-        void Start()
-        {
-            agent = GetComponent<NavMeshAgent>();
-            agent.updatePosition = false;
-            agent.updateRotation = false;
-            agent.updateUpAxis = false;
-        }
-
-        public Vector3[] DrawPath(Vector3 start, Vector3 target, Color color)
-        {
-            var path = new NavMeshPath();
-            if (agent.isOnNavMesh == false) {
-              agent.Warp(start);
-            }
-            agent.nextPosition = start;
-            agent.CalculatePath(target, path);
-            var line = this.GetComponent<LineRenderer>();
-            if( line == null )
-            {
-              line = this.gameObject.AddComponent<LineRenderer>();
-              line.material = new Material( Shader.Find( "Sprites/Default" ) ) { color = color };
-              line.SetWidth( 0.5f, 0.5f );
-              line.SetColors( color, color );
-            }
-
-            line.SetVertexCount( path.corners.Length );
-
-            for( int i = 0; i < path.corners.Length; i++ )
-            {
-              line.SetPosition( i, path.corners[ i ] );
-            }
-
-            Debug.Log($"Found {path.corners.Length} waypoints");
-
-            return path.corners;
-        }
-    }
-
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
@@ -99,22 +56,6 @@ namespace LethalMod
                 local_player = HUDManager.Instance?.localPlayer;
                 if (local_player != null) {
                     camera = local_player.gameplayCamera;
-                    if (camera.gameObject.GetComponent<PathFinder>() == null) {
-                        Logger.LogWarning($"Attaching PathFinder to local player");
-                        camera.gameObject.AddComponent<PathFinder>(); 
-                    }
-                    // if (NavMesh.SamplePosition(local_player.transform.position, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
-                    //     if (camera.gameObject.GetComponent<NavMeshAgent>() == null) {
-                    //         Logger.LogWarning($"Attaching NavMeshAgent to local player");
-                    //         var agent = camera.gameObject.AddComponent<NavMeshAgent>();
-                    //         agent.enabled = false;
-                    //         agent.isStopped = true;
-                    //     }
-                    // }
-                    // else
-                    // {
-                    //     Logger.LogError("No valid NavMesh found. Make sure a NavMesh is baked in the scene.");
-                    // }
                     entity_update_timer = entity_update_interval;
                 }
             }
@@ -167,12 +108,37 @@ namespace LethalMod
                 color, false);
                 render.draw_box_outline(
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
-                box_height,
-                color, box_thickness);
-                camera.gameObject.GetComponent<PathFinder>().DrawPath(camera.transform.position, entity_position, color);
+                box_height, color, box_thickness);
+                draw_path(entity_position, local_player.transform.position, color, 2f);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
             }
+        }
+
+        private void draw_path(Vector3 target, Vector3 start, Color color, float width)
+        {
+          NavMeshAgent agent = local_player.gameObject.GetComponent<NavMeshAgent>();
+          if (agent == null) {
+            agent = local_player.gameObject.AddComponent<NavMeshAgent>();
+          }
+          agent.updatePosition = false;
+          agent.updateRotation = false;
+          agent.updateUpAxis = false;
+          var path = new NavMeshPath();
+          agent.transform.position = start;
+          agent.nextPosition = start;
+          agent.enabled = false;
+          agent.enabled = true;
+          agent.CalculatePath(target, path);
+          Logger.LogInfo($"Found {path.corners.Length} waypoints");
+          Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
+          Vector2 next;
+          for (int i = 0; i < path.corners.Length - 1; i++) {
+              var screen_pos = world_to_screen(path.corners[i]);
+              next = new Vector2(screen_pos.x, screen_pos.y);
+              render.draw_line(previous, next, color, width);
+              previous = next;
+          }
         }
     }
 
