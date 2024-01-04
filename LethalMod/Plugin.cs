@@ -23,10 +23,6 @@ namespace LethalMod
         public Vector3[] GetPath(Vector3 target)
         {
             var path = new NavMeshPath();
-            //agent.transform.position = start;
-            // agent.enabled = false;
-            // agent.isStopped = true;
-            //agent.SetDestination(target);
             agent.CalculatePath(target, path);
             switch (path.status)
             {
@@ -70,15 +66,6 @@ namespace LethalMod
 
         public void OnGUI()
         {
-            // Y is player's foot position
-            //GUI.Label(new Rect(100, 80, 500, 30),
-            //  $"{local_player.name} X: {local_player.transform.position.x}, Y: {local_player.transform.position.y}, Z: {local_player.transform.position.z}");
-
-            //GUI.Label(new Rect(100, 50, 500, 30),
-            //  $"Camera X: {camera.transform.position.x}, Y: {camera.transform.position.y}, Z: {camera.transform.position.z}");
-
-            //GUI.Label(new Rect(100, 100, 500, 30), $"{camera.transform.forward.x}{camera.transform.forward.y}{camera.transform.forward.z}" );
-
             foreach (var go in grabbable_objects)
             {
                 esp(go.transform.position, Color.green, go.transform.name);
@@ -172,7 +159,7 @@ namespace LethalMod
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height,
                 color, box_thickness);
-                draw_path(local_player.thisPlayerBody.GetComponent<PathFinder>().GetPath( entity_position), entity_position, color, 2f);
+                draw_path(local_player.thisPlayerBody.GetComponent<PathFinder>().GetPath(entity_position), entity_position, color, 2f);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
             }
@@ -180,6 +167,7 @@ namespace LethalMod
 
         private void draw_path(Vector3[] path, Vector3 end, Color color, float width)
         {
+            Vector3 screen_pos;
             Vector3 screen_end_pos = world_to_screen(end);
             Logger.LogInfo($"Found {path.Length} waypoints");
             if (path.Length == 0) {
@@ -189,7 +177,8 @@ namespace LethalMod
                 Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
                 Vector2 next;
                 for (int i = 0; i < path.Length - 1; i++) {
-                    next = new Vector2(path[i].x, path[i].y);
+                    screen_pos = world_to_screen(path[i]);
+                    next = new Vector2(screen_pos.x, screen_pos.y);
                     render.draw_line(previous, next, color, width);
                     previous = next;
                 }
