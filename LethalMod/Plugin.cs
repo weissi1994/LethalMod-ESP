@@ -20,27 +20,35 @@ namespace LethalMod
             agent.updateUpAxis = false;
         }
 
-        public Vector3[] DrawPath(Vector3 target, Color color)
+        public Vector3[] DrawPath(Vector3 start, Vector3 target, Color color)
         {
             var path = new NavMeshPath();
-            agent.CalculatePath(target, path);
-            var line = this.GetComponent<LineRenderer>();
-            if( line == null )
-            {
-              line = this.gameObject.AddComponent<LineRenderer>();
-              line.material = new Material( Shader.Find( "Sprites/Default" ) ) { color = color };
-              line.SetWidth( 0.5f, 0.5f );
-              line.SetColors( color, color );
+            agent.nextPosition = start;
+            if (NavMesh.SamplePosition(local_player.transform.position, out NavMeshHit hit, 1.0f, NavMesh.AllAreas)) {
+                agent.CalculatePath(target, path);
+                var line = this.GetComponent<LineRenderer>();
+                if( line == null )
+                {
+                  line = this.gameObject.AddComponent<LineRenderer>();
+                  line.material = new Material( Shader.Find( "Sprites/Default" ) ) { color = color };
+                  line.SetWidth( 0.5f, 0.5f );
+                  line.SetColors( color, color );
+                }
+
+                line.SetVertexCount( path.corners.Length );
+
+                for( int i = 0; i < path.corners.Length; i++ )
+                {
+                  line.SetPosition( i, path.corners[ i ] );
+                }
+
+                return path.corners;
             }
-
-            line.SetVertexCount( path.corners.Length );
-
-            for( int i = 0; i < path.corners.Length; i++ )
+            else
             {
-              line.SetPosition( i, path.corners[ i ] );
+                Debug.LogDebug("No valid NavMesh found. Make sure a NavMesh is baked in the scene.");
+                return new Vector3[];
             }
-
-            return path.corners;
         }
     }
 
@@ -163,7 +171,7 @@ namespace LethalMod
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height,
                 color, box_thickness);
-                camera.gameObject.GetComponent<PathFinder>().DrawPath(entity_position, color);
+                camera.gameObject.GetComponent<PathFinder>().DrawPath(camera.transform.position, entity_position, color);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
             }
