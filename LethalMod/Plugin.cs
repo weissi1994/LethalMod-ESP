@@ -11,6 +11,7 @@ namespace LethalMod
     public class Plugin : BaseUnityPlugin
     {
         private EnemyAI[] enemies;
+        private EntranceTeleport[] entries;
         private PlayerControllerB local_player;
         private GrabbableObject[] grabbable_objects;
         private Camera camera;
@@ -23,6 +24,7 @@ namespace LethalMod
             // Plugin startup logic
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             enemies = [];
+            entries = [];
             grabbable_objects = [];
         }
 
@@ -43,6 +45,11 @@ namespace LethalMod
                 esp(enemy.transform.position, Color.red, enemy.transform.name);
             }
 
+            foreach (var entry in entries)
+            {
+                esp(entry.transform.position, Color.blue, entry.transform.name);
+            }
+
         }
 
         private void EntityUpdate()
@@ -50,6 +57,7 @@ namespace LethalMod
             if (entity_update_timer <= 0f)
             {
                 enemies = FindObjectsOfType<EnemyAI>();
+                entries = FindObjectsOfType<EntranceTeleport>();
                 grabbable_objects = FindObjectsOfType<GrabbableObject>();
 
                 // You have to open menu to get local player lol
