@@ -183,7 +183,7 @@ namespace LethalMod
                 Vector3 tmp = obj.transform.position;
                 tmp.y = tmp.y - 1.5f;
                 DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
-              } else if (obj is GrabbableObject) {
+              } else if (obj is GrabbableObject && GameNetworkManager.Instance.localPlayerController.isInsideFactory) {
                 DrawPath(obj.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
               }
             }
@@ -277,7 +277,7 @@ namespace LethalMod
 
         private void DrawPath(Vector3 target, Vector3 start, Color color, float width)
         {
-          if (GameNetworkManager.Instance.localPlayerController == null || GameNetworkManager.Instance.localPlayerController.isInHangarShipRoom || !GameNetworkManager.Instance.localPlayerController.isInsideFactory) {
+          if (GameNetworkManager.Instance.localPlayerController == null || !GameNetworkManager.Instance.localPlayerController.isInsideFactory) {
             Debug.LogWarning($"Not possible to do pathfinding here");
             return;
           }
