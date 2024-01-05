@@ -102,12 +102,12 @@ namespace LethalMod
         public void OnGUI()
         {
             if (isESPEnabled) {
-                ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
+                ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
                 ProcessObjects<Landmine>((landmine, vector) => "LANDMINE ");
                 ProcessObjects<Turret>((turret, vector) => "TURRET ");
-                ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
                 ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
                 ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " ");
+                ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
 
                 if (isPlayerESPEnabled)
                   ProcessPlayers();
@@ -223,9 +223,9 @@ namespace LethalMod
           Action<EnemyAI> processEnemy = enemyAI =>
           {
             Vector3 screen;
-            if (GameNetworkManager.Instance.localPlayerController != null && enemyAI.eye != null) {
+            if (GameNetworkManager.Instance.localPlayerController != null && enemyAI != null) {
               if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
-                  enemyAI.eye.transform.position, out screen))
+                  enemyAI.transform.position, out screen))
               {
                 string label;
                 if (string.IsNullOrWhiteSpace(enemyAI.enemyType.enemyName))
@@ -234,10 +234,10 @@ namespace LethalMod
                 }
                 else
                   label = enemyAI.enemyType.enemyName + " ";
-                float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.eye.transform.position);
+                float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.transform.position);
                 distance = (float)Math.Round(distance);
                 DrawLabel(screen, label, Color.red, distance);
-                DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 2f);
+                //DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 2f);
               }
             }
           };
@@ -277,8 +277,8 @@ namespace LethalMod
 
         private void DrawPath(Vector3 target, Vector3 start, Color color, float width)
         {
-          if (GameNetworkManager.Instance.localPlayerController == null || !GameNetworkManager.Instance.localPlayerController.isInsideFactory) {
-            Debug.LogWarning($"Not possible to do pathfinding here");
+          if (GameNetworkManager.Instance.localPlayerController == null) {
+            //Debug.LogWarning($"Not possible to do pathfinding here");
             return;
           }
           NavMeshAgent agent = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<NavMeshAgent>();
@@ -309,7 +309,7 @@ namespace LethalMod
                   render.draw_line(previous, end_pos, color, width);
                   break;
               case NavMeshPathStatus.PathPartial:
-                  Debug.LogWarning($"will only be able to move partway");
+                  //Debug.LogWarning($"will only be able to move partway");
                   for (int i = 0; i < path.corners.Length - 1; i++) {
                       var screen_pos = world_to_screen(path.corners[i]);
                       next = new Vector2(screen_pos.x, screen_pos.y);
