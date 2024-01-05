@@ -183,7 +183,7 @@ namespace LethalMod
                 Vector3 tmp = obj.transform.position;
                 tmp.y = tmp.y - 2;
                 DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
-              } else if (obj is GrabbableObject || obj is SteamValveHazard) {
+              } else if (obj is GrabbableObject) {
                 DrawPath(obj.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
               }
             }
@@ -210,7 +210,6 @@ namespace LethalMod
               float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, player.transform.position);
               distance = (float)Math.Round(distance);
               DrawLabel(screen, label, Color.green, distance);
-              DrawPath(player.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.green, 2f);
             }
           }
         }
