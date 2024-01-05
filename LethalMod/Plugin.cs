@@ -181,7 +181,7 @@ namespace LethalMod
               if (obj is EntranceTeleport)
               {
                 Vector3 tmp = obj.transform.position;
-                tmp.y = tmp.y - 1.5;
+                tmp.y = tmp.y - 1.5f;
                 DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
               } else if (obj is GrabbableObject) {
                 DrawPath(obj.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
@@ -223,27 +223,28 @@ namespace LethalMod
           Action<EnemyAI> processEnemy = enemyAI =>
           {
             Vector3 screen;
-            if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
-                enemyAI.eye.transform.position, out screen))
-            {
-              string label;
-              if (string.IsNullOrWhiteSpace(enemyAI.enemyType.enemyName))
+            if (GameNetworkManager.Instance.localPlayerController != null && enemyAI.eye != null) {
+              if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
+                  enemyAI.eye.transform.position, out screen))
               {
-                label = "Unknown Enemy ";
+                string label;
+                if (string.IsNullOrWhiteSpace(enemyAI.enemyType.enemyName))
+                {
+                  label = "Unknown Enemy ";
+                }
+                else
+                  label = enemyAI.enemyType.enemyName + " ";
+                float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.eye.transform.position);
+                distance = (float)Math.Round(distance);
+                DrawLabel(screen, label, Color.red, distance);
+                DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 2f);
               }
-              else
-                label = enemyAI.enemyType.enemyName + " ";
-              float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.eye.transform.position);
-              distance = (float)Math.Round(distance);
-              DrawLabel(screen, label, Color.red, distance);
-              DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 2f);
             }
           };
 
           foreach (EnemyAI enemyAI in cachedEnemies.Cast<EnemyAI>())
           {
-            if (enemyAI != null)
-              processEnemy(enemyAI);
+            processEnemy(enemyAI);
           }
         }
 
