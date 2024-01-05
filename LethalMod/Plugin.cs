@@ -18,7 +18,7 @@ namespace LethalMod
         private Dictionary<Type, List<Component>> objectCache = new Dictionary<Type, List<Component>>();
         private float cacheRefreshInterval = 1.5f;
         private bool isESPEnabled = true;
-        private bool isEnemyESPEnabled = false;
+        private bool isEnemyESPEnabled = true;
         private bool isPlayerESPEnabled = false;
 
         private float lastToggleTime = 0f;
