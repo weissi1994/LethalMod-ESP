@@ -277,6 +277,10 @@ namespace LethalMod
 
         private void DrawPath(Vector3 target, Vector3 start, Color color, float width)
         {
+          if (GameNetworkManager.Instance.localPlayerController == null || GameNetworkManager.Instance.localPlayerController.isInHangarShipRoom || !GameNetworkManager.Instance.localPlayerController.isInsideFactory) {
+            Debug.LogWarning($"Not possible to do pathfinding here");
+            return;
+          }
           NavMeshAgent agent = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<NavMeshAgent>();
           if (agent == null) {
             agent = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<NavMeshAgent>();
