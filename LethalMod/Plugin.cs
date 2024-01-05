@@ -4,78 +4,109 @@ using UnityEngine;
 using System;
 using UnityEngine.AI;
 using System.IO;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+
 
 namespace LethalMod
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        private EnemyAI[] enemies;
-        private EntranceTeleport[] entries;
-        private PlayerControllerB local_player;
-        private GrabbableObject[] grabbable_objects;
-        private Camera camera;
+        private Dictionary<Type, List<Component>> objectCache = new Dictionary<Type, List<Component>>();
+        private float cacheRefreshInterval = 1.5f;
+        private bool isESPEnabled = true;
 
-        private readonly float entity_update_interval = 5f;
-        private float entity_update_timer;
+        private float lastToggleTime = 0f;
+        private const float toggleCooldown = 0.5f; 
+
+        #region Keypress logic
+        private const int VK_INSERT = 0x2D;
+
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
+
+        private bool IsKeyDown(int keyCode)
+        {
+          return (GetAsyncKeyState(keyCode) & 0x8000) > 0;
+        }
+        #endregion
 
         private void Awake()
         {
             // Plugin startup logic
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
-            enemies = [];
-            entries = [];
-            grabbable_objects = [];
+            StartCoroutine(CacheRefreshRoutine());
         }
+
+        #region Cache
+        IEnumerator CacheRefreshRoutine()
+        {
+          while (true)
+          {
+            RefreshCache();
+            yield return new WaitForSeconds(cacheRefreshInterval);
+          }
+        }
+
+        void RefreshCache()
+        {
+          objectCache.Clear();
+          CacheObjects<EntranceTeleport>();
+          CacheObjects<GrabbableObject>();
+          CacheObjects<Landmine>();
+          CacheObjects<Turret>();
+          CacheObjects<Terminal>();
+          CacheObjects<PlayerControllerB>();
+          CacheObjects<SteamValveHazard>();
+          CacheObjects<EnemyAI>();
+        }
+
+        void CacheObjects<T>() where T : Component
+        {
+          objectCache[typeof(T)] = new List<Component>(FindObjectsOfType<T>());
+        }
+        #endregion
 
         public void Update()
         {
-            EntityUpdate();
+            bool isKeyDown = IsKeyDown(VK_INSERT);
+
+            if (isKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+              isESPEnabled = !isESPEnabled;
+              lastToggleTime = Time.time;
+            }
         }
 
         public void OnGUI()
         {
-            foreach (var go in grabbable_objects)
-            {
-                esp(go.transform.position, Color.green, go.transform.name);
+            if (isESPEnabled) {
+                ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
+                ProcessObjects<Landmine>((landmine, vector) => "LANDMINE ");
+                ProcessObjects<Turret>((turret, vector) => "TURRET ");
+                ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
+                ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
+                ProcessPlayers();
+
+                ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " ");
+
+                ProcessEnemies();
+
+                // foreach (var entry in entries)
+                // {
+                //     var tmp = entry.transform.position;
+                //     tmp.y = tmp.y - 1;
+                //     esp(tmp, Color.blue, entry.transform.name);
+                // }
             }
-
-            foreach (var enemy in enemies)
-            {
-                esp(enemy.transform.position, Color.red, enemy.transform.name);
-            }
-
-            foreach (var entry in entries)
-            {
-                var tmp = entry.transform.position;
-                tmp.y = tmp.y - 1;
-                esp(tmp, Color.blue, entry.transform.name);
-            }
-
-        }
-
-        private void EntityUpdate()
-        {
-            if (entity_update_timer <= 0f)
-            {
-                enemies = FindObjectsOfType<EnemyAI>();
-                entries = FindObjectsOfType<EntranceTeleport>();
-                grabbable_objects = FindObjectsOfType<GrabbableObject>();
-
-                // You have to open menu to get local player lol
-                local_player = HUDManager.Instance?.localPlayer;
-                if (local_player != null) {
-                    camera = local_player.gameplayCamera;
-                    entity_update_timer = entity_update_interval;
-                }
-            }
-
-            entity_update_timer -= Time.deltaTime;
         }
 
         private Vector3 world_to_screen(Vector3 world)
         {
-            Vector3 screen = camera.WorldToViewportPoint(world);
+            Vector3 screen = GameNetworkManager.Instance.localPlayerController.gameplayCamera.WorldToViewportPoint(world);
 
             screen.x *= Screen.width;
             screen.y *= Screen.height;
@@ -87,21 +118,145 @@ namespace LethalMod
 
         private float distance(Vector3 world_position)
         {
-            return Vector3.Distance(camera.transform.position, world_position);
+            return Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, world_position);
+        }
+        #region ESP Drawing
+
+        public static bool WorldToScreen(Camera camera, Vector3 world, out Vector3 screen)
+        {
+          screen = camera.WorldToViewportPoint(world);
+
+          screen.x *= Screen.width;
+          screen.y *= Screen.height;
+
+          screen.y = Screen.height - screen.y;
+
+          return screen.z > 0;
         }
 
-        private void esp(Vector3 entity_position, Color color, String label)
+        private void ProcessObjects<T>(Func<T, Vector3, string> labelBuilder) where T : Component
         {
-            if (camera == null)
+          if (!objectCache.TryGetValue(typeof(T), out var cachedObjects))
+            return;
+
+          foreach (T obj in cachedObjects.Cast<T>())
+          {
+            if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld))
             {
-                Logger.LogDebug($"not in-game; camera is null");
-                return;
+              continue;
             }
 
-            Vector3 entity_screen_pos = world_to_screen(entity_position);
-
-            if (entity_screen_pos.z < 0 || Math.Abs(entity_position.y - local_player.transform.position.y) > 50)
+            if (obj is GrabbableObject GO2 && GO2.itemProperties.itemName is "clipboard" or "Sticky note")
             {
+              continue;
+            }
+
+            if (obj is SteamValveHazard valve && valve.triggerScript.interactable == false)
+            {
+              continue;
+            }
+
+            Vector3 screen;
+
+            if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
+                obj.transform.position, out screen))
+            {
+              string label = labelBuilder(obj, screen);
+              float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, obj.transform.position);
+              distance = (float)Math.Round(distance);
+              DrawLabel(screen, label, GetColorForObject<T>(), distance);
+              esp(obj.transform.position, screen, GetColorForObject<T>(), label);
+            }
+          }
+        }
+
+        private void ProcessPlayers()
+        {
+          if (!objectCache.TryGetValue(typeof(PlayerControllerB), out var cachedPlayers))
+            return;
+
+          foreach (PlayerControllerB player in cachedPlayers.Cast<PlayerControllerB>())
+          {
+            if (player.isPlayerDead || player.IsLocalPlayer || player.playerUsername == GameNetworkManager.Instance.localPlayerController.playerUsername || player.disconnectedMidGame)
+            {
+              continue;
+            }
+
+            Vector3 screen;
+            if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
+                player.transform.position, out screen))
+            {
+              string label = player.playerUsername + " ";
+              float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, player.transform.position);
+              distance = (float)Math.Round(distance);
+              DrawLabel(screen, label, Color.green, distance);
+            }
+          }
+        }
+
+        private void ProcessEnemies()
+        {
+
+          if (!objectCache.TryGetValue(typeof(EnemyAI), out var cachedEnemies))
+            return;
+
+          Action<EnemyAI> processEnemy = enemyAI =>
+          {
+            Vector3 screen;
+            if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
+                enemyAI.eye.transform.position, out screen))
+            {
+              string label;
+              if (string.IsNullOrWhiteSpace(enemyAI.enemyType.enemyName))
+              {
+                label = "Unknown Enemy ";
+              }
+              else
+                label = enemyAI.enemyType.enemyName + " ";
+              float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.eye.transform.position);
+              distance = (float)Math.Round(distance);
+              DrawLabel(screen, label, Color.red, distance);
+            }
+          };
+
+          foreach (EnemyAI enemyAI in cachedEnemies.Cast<EnemyAI>())
+          {
+            processEnemy(enemyAI);
+          }
+        }
+
+        private void DrawLabel(Vector3 screenPosition, string text, Color color, float distance)
+        {
+          GUI.contentColor = color;
+          GUI.Label(new Rect(screenPosition.x, screenPosition.y, 75f, 50f), text + distance + "m");
+        }
+
+        private Color GetColorForObject<T>()
+        {
+          switch (typeof(T).Name)
+          {
+            case "EntranceTeleport":
+              return Color.cyan;
+            case "GrabbableObject":
+              return Color.blue;
+            case "Landmine":
+              return Color.red;
+            case "Turret":
+              return Color.red;
+            case "SteamValveHazard":
+              return Color.yellow;
+            case "Terminal":
+              return Color.magenta;
+            default:
+              return Color.white;
+          }
+        }
+
+        private void esp(Vector3 entity_position, Vector3 entity_screen_pos, Color color, String label)
+        {
+            if (GameNetworkManager.Instance.localPlayerController.gameplayCamera == null)
+            {
+                Logger.LogDebug($"not in-game; camera is null");
                 return;
             }
 
@@ -119,7 +274,7 @@ namespace LethalMod
                 render.draw_box_outline(
                 new Vector2(entity_screen_pos.x - box_width / 2, entity_screen_pos.y - box_height / 2), box_width,
                 box_height, color, box_thickness);
-                draw_path(entity_position, local_player.transform.position, color, 2f);
+                draw_path(entity_position, GameNetworkManager.Instance.localPlayerController.transform.position, color, 2f);
                 //render.draw_line(new Vector2(Screen.width / 2, Screen.height),
                 //new Vector2(entity_screen_pos.x, entity_screen_pos.y + box_height / 2), color, 2f);
             }
@@ -127,9 +282,9 @@ namespace LethalMod
 
         private void draw_path(Vector3 target, Vector3 start, Color color, float width)
         {
-          NavMeshAgent agent = local_player.gameObject.GetComponent<NavMeshAgent>();
+          NavMeshAgent agent = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<NavMeshAgent>();
           if (agent == null) {
-            agent = local_player.gameObject.AddComponent<NavMeshAgent>();
+            agent = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<NavMeshAgent>();
           }
           agent.updatePosition = false;
           agent.updateRotation = false;
@@ -168,6 +323,7 @@ namespace LethalMod
                   break;
           }
         }
+        #endregion
     }
 
     public class render : MonoBehaviour
