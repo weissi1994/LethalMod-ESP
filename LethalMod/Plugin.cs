@@ -18,7 +18,7 @@ namespace LethalMod
         private Dictionary<Type, List<Component>> objectCache = new Dictionary<Type, List<Component>>();
         private float cacheRefreshInterval = 1.5f;
         private bool isESPEnabled = true;
-        private bool isEnemyESPEnabled = true;
+        private bool isEnemyESPEnabled = false;
         private bool isPlayerESPEnabled = false;
 
         private float lastToggleTime = 0f;
@@ -181,7 +181,7 @@ namespace LethalMod
               if (obj is EntranceTeleport)
               {
                 Vector3 tmp = obj.transform.position;
-                tmp.y = tmp.y - 2;
+                tmp.y = tmp.y - 1.5;
                 DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
               } else if (obj is GrabbableObject) {
                 DrawPath(obj.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
@@ -242,7 +242,8 @@ namespace LethalMod
 
           foreach (EnemyAI enemyAI in cachedEnemies.Cast<EnemyAI>())
           {
-            processEnemy(enemyAI);
+            if (enemyAI != null)
+              processEnemy(enemyAI);
           }
         }
 
@@ -312,7 +313,7 @@ namespace LethalMod
                   }
                   break;
               default:
-                  Debug.LogError($"There is no valid path to reach.");
+                  // Debug.LogError($"There is no valid path to reach.");
                   break;
           }
         }
