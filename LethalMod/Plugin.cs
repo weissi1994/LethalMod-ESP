@@ -95,7 +95,7 @@ namespace LethalMod
 
             if (isEnemyESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isEnemyESPEnabled = !isPlayerESPEnabled;
+                isEnemyESPEnabled = !isEnemyESPEnabled;
                 lastToggleTime = Time.time;
             }
 
@@ -192,12 +192,12 @@ namespace LethalMod
                 GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Player ESP is: {label_text_tmp}");
                 if (isPlayerESPEnabled)
                     ProcessPlayers();
-
-                GUI.contentColor = Color.white;
-                GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Open nearest big door");
-                GUI.Label(new Rect(10f, 85f, 200f, 30f), $"7 - Close all big doors");
-                GUI.Label(new Rect(10f, 100f, 200f, 30f), $"8 - Open/Unlock all doors");
             }
+
+            GUI.contentColor = Color.white;
+            GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Open nearest big door");
+            GUI.Label(new Rect(10f, 85f, 200f, 30f), $"7 - Close all big doors");
+            GUI.Label(new Rect(10f, 100f, 200f, 30f), $"8 - Open/Unlock all doors");
         }
 
         private Vector3 world_to_screen(Vector3 world)
@@ -382,15 +382,15 @@ namespace LethalMod
             agent.enabled = false;
             agent.enabled = true;
             agent.CalculatePath(target, path);
-            if (path.corners.Length < 2) //if the path has 1 or no corners, there is no need
+            if (path.corners.Length < 3) //if the path has 1 or no corners, there is no need
                 return;
             Vector2 previous;
             Vector2 next;
             switch (path.status)
             {
                 case NavMeshPathStatus.PathComplete:
-                    previous = world_to_screen(path.corners[0]);
-                    for (int i = 1; i < path.corners.Length - 1; i++)
+                    previous = world_to_screen(path.corners[1]);
+                    for (int i = 2; i < path.corners.Length - 1; i++)
                     {
                         var screen_pos = world_to_screen(path.corners[i]);
                         next = new Vector2(screen_pos.x, screen_pos.y);
@@ -401,15 +401,15 @@ namespace LethalMod
                     render.draw_line(previous, end_pos, color, width);
                     break;
                 case NavMeshPathStatus.PathPartial:
-                    //Debug.LogWarning($"will only be able to move partway");
-                    previous = world_to_screen(path.corners[0]);
-                    for (int i = 1; i < path.corners.Length - 1; i++)
-                    {
-                        var screen_pos = world_to_screen(path.corners[i]);
-                        next = new Vector2(screen_pos.x, screen_pos.y);
-                        render.draw_line(previous, next, Color.yellow, width);
-                        previous = next;
-                    }
+                    // Debug.LogWarning($"will only be able to move partway");
+                    // previous = world_to_screen(path.corners[0]);
+                    // for (int i = 1; i < path.corners.Length - 1; i++)
+                    // {
+                    //     var screen_pos = world_to_screen(path.corners[i]);
+                    //     next = new Vector2(screen_pos.x, screen_pos.y);
+                    //     render.draw_line(previous, next, Color.yellow, width);
+                    //     previous = next;
+                    // }
                     break;
                 default:
                     // Debug.LogError($"There is no valid path to reach.");
