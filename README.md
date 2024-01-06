@@ -17,7 +17,9 @@ ESP Mod with pathfinding capabilities.
 
 > Yellow paths indicate unreachable targets
 
+---
+
 Inspired by:
 
-- https://www.unknowncheats.me/forum/other-fps-games/612099-lethal-company-esp.html
 - https://github.com/pseuxide/lethal_to_company
+- https://www.unknowncheats.me/forum/other-fps-games/612099-lethal-company-esp.html
