@@ -27,6 +27,7 @@ namespace LethalMod
         private const int VK_ESP = 0x33; // 3
         private const int VK_ESP_ENEMY = 0x34; // 4
         private const int VK_ESP_PLAYER = 0x35; // 5
+        private const int VK_OPEN_DOOR = 0x36; // 6
 
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
@@ -65,6 +66,7 @@ namespace LethalMod
             CacheObjects<PlayerControllerB>();
             CacheObjects<SteamValveHazard>();
             CacheObjects<EnemyAI>();
+            CacheObjects<TerminalAccessibleObject>();
         }
 
         void CacheObjects<T>() where T : Component
@@ -78,6 +80,7 @@ namespace LethalMod
             bool isESPKeyDown = IsKeyDown(VK_ESP);
             bool isEnemyESPKeyDown = IsKeyDown(VK_ESP_ENEMY);
             bool isPlayerESPKeyDown = IsKeyDown(VK_ESP_PLAYER);
+            bool isOpenDoorKeyDown = IsKeyDown(VK_OPEN_DOOR);
 
             if (isESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
@@ -94,6 +97,30 @@ namespace LethalMod
             if (isPlayerESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
                 isPlayerESPEnabled = !isPlayerESPEnabled;
+                lastToggleTime = Time.time;
+            }
+
+            if (isOpenDoorKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+                TerminalAccessibleObject closest = null;
+                foreach (TerminalAccessibleObject obj in objectCache[typeof(TerminalAccessibleObject)])
+                {
+                    if (obj.isBigDoor)
+                    {
+                        if (closest == null || distance(closest.transform.position) > distance(obj.transform.position))
+                        {
+                            closest = obj;
+                        }
+                    }
+                }
+                if (closest)
+                {
+                    if (GameNetworkManager.Instance.localPlayerController.IsServer)
+                        closest.SetDoorOpenServerRpc(true);
+                    if (GameNetworkManager.Instance.localPlayerController.IsClient)
+                        closest.SetDoorOpenClientRpc(true);
+                }
+
                 lastToggleTime = Time.time;
             }
         }
@@ -121,6 +148,11 @@ namespace LethalMod
                 label_text_tmp = isPlayerESPEnabled == true ? "On" : "Off";
                 GUI.contentColor = isPlayerESPEnabled == true ? Color.green : Color.red;
                 GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Player ESP is: {label_text_tmp}");
+                if (isPlayerESPEnabled)
+                    ProcessPlayers();
+
+                GUI.contentColor = Color.white;
+                GUI.Label(new Rect(10f, 55f, 200f, 30f), $"6 - Open nearest big door");
                 if (isPlayerESPEnabled)
                     ProcessPlayers();
             }
