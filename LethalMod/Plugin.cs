@@ -29,6 +29,7 @@ namespace LethalMod
         private const int VK_ESP_PLAYER = 0x35; // 5
         private const int VK_OPEN_DOOR = 0x36; // 6
         private const int VK_CLOSE_DOORS = 0x37; // 7
+        private const int VK_OPEN_DOORS = 0x38; // 8
 
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
@@ -68,6 +69,7 @@ namespace LethalMod
             CacheObjects<SteamValveHazard>();
             CacheObjects<EnemyAI>();
             CacheObjects<TerminalAccessibleObject>();
+            CacheObjects<DoorLock>();
         }
 
         void CacheObjects<T>() where T : Component
@@ -83,6 +85,7 @@ namespace LethalMod
             bool isPlayerESPKeyDown = IsKeyDown(VK_ESP_PLAYER);
             bool isOpenDoorKeyDown = IsKeyDown(VK_OPEN_DOOR);
             bool isCloseDoorsKeyDown = IsKeyDown(VK_CLOSE_DOORS);
+            bool isOpenDoorsKeyDown = IsKeyDown(VK_OPEN_DOORS);
 
             if (isESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
@@ -141,6 +144,27 @@ namespace LethalMod
 
                 lastToggleTime = Time.time;
             }
+
+            if (isOpenDoorsKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+                foreach (TerminalAccessibleObject obj in objectCache[typeof(TerminalAccessibleObject)])
+                {
+                    if (obj.isBigDoor)
+                    {
+                        if (GameNetworkManager.Instance.localPlayerController.IsServer)
+                            obj.SetDoorOpenServerRpc(true);
+                        if (GameNetworkManager.Instance.localPlayerController.IsClient)
+                            obj.SetDoorOpenClientRpc(true);
+                    }
+                }
+
+                foreach (DoorLock obj in objectCache[typeof(DoorLock)])
+                {
+                    obj.UnlockDoorSyncWithServer();
+                }
+
+                lastToggleTime = Time.time;
+            }
         }
 
         public void OnGUI()
@@ -172,6 +196,7 @@ namespace LethalMod
                 GUI.contentColor = Color.white;
                 GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Open nearest big door");
                 GUI.Label(new Rect(10f, 85f, 200f, 30f), $"7 - Close all big doors");
+                GUI.Label(new Rect(10f, 100f, 200f, 30f), $"8 - Open/Unlock all doors");
             }
         }
 
@@ -257,7 +282,7 @@ namespace LethalMod
 
             foreach (PlayerControllerB player in cachedPlayers.Cast<PlayerControllerB>())
             {
-                if (player.isPlayerDead || player.IsLocalPlayer || player.playerUsername == GameNetworkManager.Instance.localPlayerController.playerUsername || player.disconnectedMidGame)
+                if (player.isPlayerDead || player.IsLocalPlayer || player.playerUsername == GameNetworkManager.Instance.localPlayerController.playerUsername || player.disconnectedMidGame || player.playerUsername.Contains("Player #"))
                 {
                     continue;
                 }
