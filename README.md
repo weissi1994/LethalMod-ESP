@@ -16,3 +16,8 @@ ESP Mod with pathfinding capabilities.
 - Exits (Cyan)
 
 > Yellow paths indicate unreachable targets
+
+Inspired by:
+
+- https://www.unknowncheats.me/forum/other-fps-games/612099-lethal-company-esp.html
+- https://github.com/official-notfishvr/Lethal-Company-Mod-Menu

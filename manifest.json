@@ -1,7 +1,7 @@
 {
   "name": "LethalMod",
-  "version_number": "0.0.4",
-  "website_url": "https://www.example.com",
+  "version_number": "0.0.5",
+  "website_url": "https://github.com/weissi1994/LethalMod-ESP",
   "description": "ESP Mod with pathfinding capabilities",
   "dependencies": ["BepInEx-BepInExPack-5.4.2100"]
 }
