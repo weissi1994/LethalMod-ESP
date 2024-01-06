@@ -24,5 +24,6 @@ ESP Mod with pathfinding capabilities.
 
 Inspired by:
 
+- https://github.com/KaylinOwO/Project-Apparatus
 - https://github.com/pseuxide/lethal_to_company
 - https://www.unknowncheats.me/forum/other-fps-games/612099-lethal-company-esp.html
