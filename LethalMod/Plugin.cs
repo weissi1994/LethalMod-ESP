@@ -308,17 +308,15 @@ namespace LethalMod
             agent.enabled = false;
             agent.enabled = true;
             agent.CalculatePath(target, path);
-            // LineRenderer lineRenderer = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<LineRenderer>();
-            // if (lineRenderer == null) {
-            //   lineRenderer = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<LineRenderer>();
-            // }
-            // lineRenderer.SetPositions(path.corners);
-            Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
+            if (path.corners.Length < 2) //if the path has 1 or no corners, there is no need
+                return;
+            Vector2 previous;
             Vector2 next;
             switch (path.status)
             {
                 case NavMeshPathStatus.PathComplete:
-                    for (int i = 0; i < path.corners.Length - 1; i++)
+                    previous = world_to_screen(path.corners[0]);
+                    for (int i = 1; i < path.corners.Length - 1; i++)
                     {
                         var screen_pos = world_to_screen(path.corners[i]);
                         next = new Vector2(screen_pos.x, screen_pos.y);
@@ -330,7 +328,8 @@ namespace LethalMod
                     break;
                 case NavMeshPathStatus.PathPartial:
                     //Debug.LogWarning($"will only be able to move partway");
-                    for (int i = 0; i < path.corners.Length - 1; i++)
+                    previous = world_to_screen(path.corners[0]);
+                    for (int i = 1; i < path.corners.Length - 1; i++)
                     {
                         var screen_pos = world_to_screen(path.corners[i]);
                         next = new Vector2(screen_pos.x, screen_pos.y);
