@@ -178,7 +178,7 @@ namespace LethalMod
                 ProcessObjects<Landmine>((landmine, vector) => "LANDMINE ");
                 ProcessObjects<Turret>((turret, vector) => "TURRET ");
                 ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
-                ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " ");
+                ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " - " + grabbableObject.scrapValue);
                 ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
 
                 label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
