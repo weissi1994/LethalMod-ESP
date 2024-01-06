@@ -197,11 +197,11 @@ namespace LethalMod
                     {
                         Vector3 tmp = obj.transform.position;
                         tmp.y = tmp.y - 1.5f;
-                        DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                        DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 1f);
                     }
                     else if (obj is GrabbableObject && GameNetworkManager.Instance.localPlayerController.isInsideFactory)
                     {
-                        DrawPath(obj.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                        DrawPath(obj.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 1f);
                     }
                 }
             }
@@ -255,7 +255,7 @@ namespace LethalMod
                         float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.transform.position);
                         distance = (float)Math.Round(distance);
                         DrawLabel(screen, label, Color.red, distance);
-                        //DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 2f);
+                        //DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 1f);
                     }
                 }
             };
