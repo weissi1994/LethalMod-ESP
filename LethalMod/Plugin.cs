@@ -101,7 +101,7 @@ namespace LethalMod
         public void OnGUI()
         {
             var label_text_tmp = isESPEnabled == true ? "On" : "Off";
-            GUI.color = isESPEnabled == true ? Color.green : Color.red;
+            GUI.contentColor = isESPEnabled == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 25f, 200f, 30f), $"3 - ESP is: {label_text_tmp}");
             if (isESPEnabled)
             {
@@ -113,13 +113,13 @@ namespace LethalMod
                 ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
 
                 label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
-                GUI.color = isEnemyESPEnabled == true ? Color.green : Color.red;
+                GUI.contentColor = isEnemyESPEnabled == true ? Color.green : Color.red;
                 GUI.Label(new Rect(10f, 40f, 200f, 30f), $"4 - Enemy ESP is: {label_text_tmp}");
                 if (isEnemyESPEnabled)
                     ProcessEnemies();
 
                 label_text_tmp = isPlayerESPEnabled == true ? "On" : "Off";
-                GUI.color = isPlayerESPEnabled == true ? Color.green : Color.red;
+                GUI.contentColor = isPlayerESPEnabled == true ? Color.green : Color.red;
                 GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Player ESP is: {label_text_tmp}");
                 if (isPlayerESPEnabled)
                     ProcessPlayers();
