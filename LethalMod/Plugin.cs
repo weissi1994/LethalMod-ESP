@@ -237,7 +237,7 @@ namespace LethalMod
 
             foreach (T obj in cachedObjects.Cast<T>())
             {
-                if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld))
+                if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld || GO.itemProperties == null || GO.scrapValue <= 0))
                 {
                     continue;
                 }
