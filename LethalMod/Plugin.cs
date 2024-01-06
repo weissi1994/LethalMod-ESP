@@ -18,7 +18,7 @@ namespace LethalMod
         private float cacheRefreshInterval = 1.5f;
         private bool isESPEnabled = true;
         private bool isEnemyESPEnabled = true;
-        private bool isPlayerESPEnabled = false;
+        private bool isPartialESPEnabled = false;
 
         private float lastToggleTime = 0f;
         private const float toggleCooldown = 0.5f;
@@ -26,7 +26,7 @@ namespace LethalMod
         #region Keypress logic
         private const int VK_ESP = 0x33; // 3
         private const int VK_ESP_ENEMY = 0x34; // 4
-        private const int VK_ESP_PLAYER = 0x35; // 5
+        private const int VK_ESP_PARTIAL = 0x35; // 5
         private const int VK_OPEN_DOOR = 0x36; // 6
         private const int VK_CLOSE_DOORS = 0x37; // 7
         private const int VK_OPEN_DOORS = 0x38; // 8
@@ -82,7 +82,7 @@ namespace LethalMod
         {
             bool isESPKeyDown = IsKeyDown(VK_ESP);
             bool isEnemyESPKeyDown = IsKeyDown(VK_ESP_ENEMY);
-            bool isPlayerESPKeyDown = IsKeyDown(VK_ESP_PLAYER);
+            bool isPartialESPKeyDown = IsKeyDown(VK_ESP_PARTIAL);
             bool isOpenDoorKeyDown = IsKeyDown(VK_OPEN_DOOR);
             bool isCloseDoorsKeyDown = IsKeyDown(VK_CLOSE_DOORS);
             bool isOpenDoorsKeyDown = IsKeyDown(VK_OPEN_DOORS);
@@ -99,9 +99,9 @@ namespace LethalMod
                 lastToggleTime = Time.time;
             }
 
-            if (isPlayerESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            if (isPartialESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isPlayerESPEnabled = !isPlayerESPEnabled;
+                isPartialESPEnabled = !isPartialESPEnabled;
                 lastToggleTime = Time.time;
             }
 
@@ -120,10 +120,7 @@ namespace LethalMod
                 }
                 if (closest)
                 {
-                    if (GameNetworkManager.Instance.localPlayerController.IsServer)
-                        closest.SetDoorOpenServerRpc(true);
-                    if (GameNetworkManager.Instance.localPlayerController.IsClient)
-                        closest.SetDoorOpenClientRpc(true);
+                    closest.SetDoorOpen(true);
                 }
 
                 lastToggleTime = Time.time;
@@ -135,10 +132,7 @@ namespace LethalMod
                 {
                     if (obj.isBigDoor)
                     {
-                        if (GameNetworkManager.Instance.localPlayerController.IsServer)
-                            obj.SetDoorOpenServerRpc(false);
-                        if (GameNetworkManager.Instance.localPlayerController.IsClient)
-                            obj.SetDoorOpenClientRpc(false);
+                        obj.SetDoorOpen(false);
                     }
                 }
 
@@ -151,10 +145,7 @@ namespace LethalMod
                 {
                     if (obj.isBigDoor)
                     {
-                        if (GameNetworkManager.Instance.localPlayerController.IsServer)
-                            obj.SetDoorOpenServerRpc(true);
-                        if (GameNetworkManager.Instance.localPlayerController.IsClient)
-                            obj.SetDoorOpenClientRpc(true);
+                        obj.SetDoorOpen(true);
                     }
                 }
 
@@ -178,21 +169,20 @@ namespace LethalMod
                 ProcessObjects<Landmine>((landmine, vector) => "LANDMINE ");
                 ProcessObjects<Turret>((turret, vector) => "TURRET ");
                 ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
-                ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " - " + grabbableObject.scrapValue);
+                ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " - " + grabbableObject.scrapValue + "\n");
                 ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
-
-                label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
-                GUI.contentColor = isEnemyESPEnabled == true ? Color.green : Color.red;
-                GUI.Label(new Rect(10f, 40f, 200f, 30f), $"4 - Enemy ESP is: {label_text_tmp}");
-                if (isEnemyESPEnabled)
-                    ProcessEnemies();
-
-                label_text_tmp = isPlayerESPEnabled == true ? "On" : "Off";
-                GUI.contentColor = isPlayerESPEnabled == true ? Color.green : Color.red;
-                GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Player ESP is: {label_text_tmp}");
-                if (isPlayerESPEnabled)
-                    ProcessPlayers();
+                ProcessPlayers();
             }
+
+            label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
+            GUI.contentColor = isEnemyESPEnabled == true ? Color.green : Color.red;
+            GUI.Label(new Rect(10f, 40f, 200f, 30f), $"4 - Enemy ESP is: {label_text_tmp}");
+            if (isEnemyESPEnabled)
+                ProcessEnemies();
+
+            label_text_tmp = isPartialESPEnabled == true ? "On" : "Off";
+            GUI.contentColor = isPartialESPEnabled == true ? Color.green : Color.red;
+            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Incomplete Path ESP is: {label_text_tmp}");
 
             GUI.contentColor = Color.white;
             GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Open nearest big door");
@@ -237,7 +227,7 @@ namespace LethalMod
 
             foreach (T obj in cachedObjects.Cast<T>())
             {
-                if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld || GO.itemProperties == null || GO.scrapValue <= 0))
+                if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld || (GO.itemProperties.itemName == "Gift" && !GO.gameObject.GetComponent<Renderer>().isVisible)))
                 {
                     continue;
                 }
@@ -269,7 +259,10 @@ namespace LethalMod
                     }
                     else if (obj is GrabbableObject && GameNetworkManager.Instance.localPlayerController.isInsideFactory)
                     {
-                        DrawPath(obj.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                        Vector3 target_pos = obj.transform.position;
+                        if (obj.name == "Apparatus")
+                            target_pos.y = target_pos.y - 3;
+                        DrawPath(target_pos, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
                     }
                 }
             }
@@ -386,34 +379,29 @@ namespace LethalMod
                 return;
             Vector2 previous;
             Vector2 next;
-            switch (path.status)
+            if (path.status == NavMeshPathStatus.PathComplete)
             {
-                case NavMeshPathStatus.PathComplete:
-                    previous = world_to_screen(path.corners[1]);
-                    for (int i = 2; i < path.corners.Length - 1; i++)
-                    {
-                        var screen_pos = world_to_screen(path.corners[i]);
-                        next = new Vector2(screen_pos.x, screen_pos.y);
-                        render.draw_line(previous, next, color, width);
-                        previous = next;
-                    }
-                    Vector3 end_pos = world_to_screen(target);
-                    render.draw_line(previous, end_pos, color, width);
-                    break;
-                case NavMeshPathStatus.PathPartial:
-                    // Debug.LogWarning($"will only be able to move partway");
-                    // previous = world_to_screen(path.corners[0]);
-                    // for (int i = 1; i < path.corners.Length - 1; i++)
-                    // {
-                    //     var screen_pos = world_to_screen(path.corners[i]);
-                    //     next = new Vector2(screen_pos.x, screen_pos.y);
-                    //     render.draw_line(previous, next, Color.yellow, width);
-                    //     previous = next;
-                    // }
-                    break;
-                default:
-                    // Debug.LogError($"There is no valid path to reach.");
-                    break;
+                previous = world_to_screen(path.corners[1]);
+                for (int i = 2; i < path.corners.Length - 1; i++)
+                {
+                    var screen_pos = world_to_screen(path.corners[i]);
+                    next = new Vector2(screen_pos.x, screen_pos.y);
+                    render.draw_line(previous, next, color, width);
+                    previous = next;
+                }
+                Vector3 end_pos = world_to_screen(target);
+                render.draw_line(previous, end_pos, color, width);
+            }
+            else if (isPartialESPEnabled && path.status == NavMeshPathStatus.PathPartial)
+            {
+                previous = world_to_screen(path.corners[1]);
+                for (int i = 2; i < path.corners.Length - 1; i++)
+                {
+                    var screen_pos = world_to_screen(path.corners[i]);
+                    next = new Vector2(screen_pos.x, screen_pos.y);
+                    render.draw_line(previous, next, Color.yellow, width);
+                    previous = next;
+                }
             }
         }
         #endregion
