@@ -101,8 +101,10 @@ namespace LethalMod
         public void OnGUI()
         {
             var label_text_tmp = isESPEnabled == true ? "On" : "Off";
+            var save_col = GUI.color;
             GUI.color = isESPEnabled == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 25f, 200f, 30f), $"3 - ESP is: {label_text_tmp}");
+            GUI.color = save_col;
             if (isESPEnabled)
             {
                 ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
@@ -113,14 +115,18 @@ namespace LethalMod
                 ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
 
                 label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
+                save_col = GUI.color;
                 GUI.color = isEnemyESPEnabled == true ? Color.green : Color.red;
                 GUI.Label(new Rect(10f, 40f, 200f, 30f), $"4 - Enemy ESP is: {label_text_tmp}");
+                GUI.color = save_col;
                 if (isEnemyESPEnabled)
                     ProcessEnemies();
 
                 label_text_tmp = isPlayerESPEnabled == true ? "On" : "Off";
+                save_col = GUI.color;
                 GUI.color = isPlayerESPEnabled == true ? Color.green : Color.red;
                 GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Player ESP is: {label_text_tmp}");
+                GUI.color = save_col;
                 if (isPlayerESPEnabled)
                     ProcessPlayers();
             }
@@ -308,34 +314,53 @@ namespace LethalMod
             agent.enabled = false;
             agent.enabled = true;
             agent.CalculatePath(target, path);
-            // LineRenderer lineRenderer = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<LineRenderer>();
-            // if (lineRenderer == null) {
-            //   lineRenderer = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<LineRenderer>();
-            // }
+            if (path.corners.Length < 2) //if the path has 1 or no corners, there is no need
+                return;
+            // TODO: move to own unity behaviour and attach component to player
+            LineRenderer lineRenderer = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<LineRenderer>();
+            if (lineRenderer == null)
+            {
+                lineRenderer = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<LineRenderer>();
+            }
+            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            lineRenderer.startWidth = width;
+            lineRenderer.endWidth = width;
+            lineRenderer.startColor = color;
+            lineRenderer.endColor = color;
+
+
             // lineRenderer.SetPositions(path.corners);
-            Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
-            Vector2 next;
+            // Vector2 previous = new Vector2(Screen.width / 2, Screen.height);
+            // Vector2 next;
             switch (path.status)
             {
                 case NavMeshPathStatus.PathComplete:
+                    lineRenderer.positionCount = path.corners.Length + 2;
+                    lineRenderer.SetPosition(0, start);
                     for (int i = 0; i < path.corners.Length - 1; i++)
                     {
-                        var screen_pos = world_to_screen(path.corners[i]);
-                        next = new Vector2(screen_pos.x, screen_pos.y);
-                        render.draw_line(previous, next, color, width);
-                        previous = next;
+                        // var screen_pos = world_to_screen(path.corners[i]);
+                        // next = new Vector2(screen_pos.x, screen_pos.y);
+                        // render.draw_line(previous, next, color, width);
+                        //previous = next;
+                        lineRenderer.SetPosition(i + 1, path.corners[i]);
                     }
-                    Vector3 end_pos = world_to_screen(target);
-                    render.draw_line(previous, end_pos, color, width);
+                    // Vector3 end_pos = world_to_screen(target);
+                    // render.draw_line(previous, end_pos, color, width);
+                    lineRenderer.SetPosition(path.corners.Length + 1, target);
                     break;
                 case NavMeshPathStatus.PathPartial:
                     //Debug.LogWarning($"will only be able to move partway");
+                    lineRenderer.sharedMaterial.SetColor("_Color", Color.yellow);
+                    lineRenderer.positionCount = path.corners.Length + 1;
+                    lineRenderer.SetPosition(0, start);
                     for (int i = 0; i < path.corners.Length - 1; i++)
                     {
-                        var screen_pos = world_to_screen(path.corners[i]);
-                        next = new Vector2(screen_pos.x, screen_pos.y);
-                        render.draw_line(previous, next, Color.yellow, width);
-                        previous = next;
+                        // var screen_pos = world_to_screen(path.corners[i]);
+                        // next = new Vector2(screen_pos.x, screen_pos.y);
+                        // render.draw_line(previous, next, Color.yellow, width);
+                        // previous = next;
+                        lineRenderer.SetPosition(i + 1, path.corners[i]);
                     }
                     break;
                 default:
