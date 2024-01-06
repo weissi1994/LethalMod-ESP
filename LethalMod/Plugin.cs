@@ -28,6 +28,7 @@ namespace LethalMod
         private const int VK_ESP_ENEMY = 0x34; // 4
         private const int VK_ESP_PLAYER = 0x35; // 5
         private const int VK_OPEN_DOOR = 0x36; // 6
+        private const int VK_CLOSE_DOORS = 0x37; // 7
 
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
@@ -81,6 +82,7 @@ namespace LethalMod
             bool isEnemyESPKeyDown = IsKeyDown(VK_ESP_ENEMY);
             bool isPlayerESPKeyDown = IsKeyDown(VK_ESP_PLAYER);
             bool isOpenDoorKeyDown = IsKeyDown(VK_OPEN_DOOR);
+            bool isCloseDoorsKeyDown = IsKeyDown(VK_CLOSE_DOORS);
 
             if (isESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
@@ -123,6 +125,22 @@ namespace LethalMod
 
                 lastToggleTime = Time.time;
             }
+
+            if (isCloseDoorsKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+                foreach (TerminalAccessibleObject obj in objectCache[typeof(TerminalAccessibleObject)])
+                {
+                    if (obj.isBigDoor)
+                    {
+                        if (GameNetworkManager.Instance.localPlayerController.IsServer)
+                            obj.SetDoorOpenServerRpc(false);
+                        if (GameNetworkManager.Instance.localPlayerController.IsClient)
+                            obj.SetDoorOpenClientRpc(false);
+                    }
+                }
+
+                lastToggleTime = Time.time;
+            }
         }
 
         public void OnGUI()
@@ -152,9 +170,8 @@ namespace LethalMod
                     ProcessPlayers();
 
                 GUI.contentColor = Color.white;
-                GUI.Label(new Rect(10f, 55f, 200f, 30f), $"6 - Open nearest big door");
-                if (isPlayerESPEnabled)
-                    ProcessPlayers();
+                GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Open nearest big door");
+                GUI.Label(new Rect(10f, 85f, 200f, 30f), $"7 - Close all big doors");
             }
         }
 
