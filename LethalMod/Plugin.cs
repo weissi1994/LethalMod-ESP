@@ -244,26 +244,34 @@ namespace LethalMod
 
                 Vector3 screen;
 
-                if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
-                    obj.transform.position, out screen))
+                try
                 {
-                    string label = labelBuilder(obj, screen);
-                    float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, obj.transform.position);
-                    distance = (float)Math.Round(distance);
-                    DrawLabel(screen, label, GetColorForObject<T>(), distance);
-                    if (obj is EntranceTeleport)
+                    if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
+                        obj.transform.position, out screen))
                     {
-                        Vector3 tmp = obj.transform.position;
-                        tmp.y = tmp.y - 1.5f;
-                        DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                        string label = labelBuilder(obj, screen);
+                        float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, obj.transform.position);
+                        distance = (float)Math.Round(distance);
+                        DrawLabel(screen, label, GetColorForObject<T>(), distance);
+                        if (obj is EntranceTeleport)
+                        {
+                            Vector3 tmp = obj.transform.position;
+                            tmp.y = tmp.y - 1.5f;
+                            DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                        }
+                        else if (obj is GrabbableObject && GameNetworkManager.Instance.localPlayerController.isInsideFactory)
+                        {
+                            Vector3 target_pos = obj.transform.position;
+                            if (obj.name == "Apparatus")
+                                target_pos.y = target_pos.y - 3;
+                            DrawPath(target_pos, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                        }
                     }
-                    else if (obj is GrabbableObject && GameNetworkManager.Instance.localPlayerController.isInsideFactory)
-                    {
-                        Vector3 target_pos = obj.transform.position;
-                        if (obj.name == "Apparatus")
-                            target_pos.y = target_pos.y - 3;
-                        DrawPath(target_pos, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
-                    }
+                }
+                catch (System.Exception e)
+                {
+                    Logger.LogError($"Failed to render {typeof(T)}:\n{e.Message}")
+                    continue;
                 }
             }
         }
