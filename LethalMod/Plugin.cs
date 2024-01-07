@@ -270,7 +270,7 @@ namespace LethalMod
                 }
                 catch (System.Exception e)
                 {
-                    Logger.LogError($"Failed to render {typeof(T)}:\n{e.Message}")
+                    Logger.LogError($"Failed to render {typeof(T)}:\n{e.Message}");
                     continue;
                 }
             }
