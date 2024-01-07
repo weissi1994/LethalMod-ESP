@@ -227,25 +227,24 @@ namespace LethalMod
 
             foreach (T obj in cachedObjects.Cast<T>())
             {
-                if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld || (GO.itemProperties.itemName == "Gift" && !GO.gameObject.GetComponent<Renderer>().isVisible)))
-                {
-                    continue;
-                }
-
-                if (obj is GrabbableObject GO2 && GO2.itemProperties.itemName is "clipboard" or "Sticky note")
-                {
-                    continue;
-                }
-
-                if (obj is SteamValveHazard valve && valve.triggerScript.interactable == false)
-                {
-                    continue;
-                }
-
-                Vector3 screen;
-
                 try
                 {
+                    if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld || (GO.itemProperties.itemName == "Gift" && !GO.gameObject.GetComponent<Renderer>().isVisible)))
+                    {
+                        continue;
+                    }
+
+                    if (obj is GrabbableObject GO2 && GO2.itemProperties.itemName is "clipboard" or "Sticky note")
+                    {
+                        continue;
+                    }
+
+                    if (obj is SteamValveHazard valve && valve.triggerScript.interactable == false)
+                    {
+                        continue;
+                    }
+
+                    Vector3 screen;
                     if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
                         obj.transform.position, out screen))
                     {
