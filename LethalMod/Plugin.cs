@@ -262,7 +262,7 @@ namespace LethalMod
                         else if (obj is GrabbableObject && GameNetworkManager.Instance.localPlayerController.isInsideFactory)
                         {
                             Vector3 target_pos = obj.transform.position;
-                            if (obj.name == "Apparatus")
+                            if (label.Contains("Apparatus"))
                                 target_pos.y = target_pos.y - 3;
                             DrawPath(target_pos, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
                         }
