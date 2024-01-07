@@ -267,7 +267,7 @@ namespace LethalMod
                         }
                     }
                 }
-                catch (System.Exception e)
+                catch (NullReferenceException e)
                 {
                     Logger.LogError($"Failed to render {typeof(T)}:\n{e.Message}");
                     continue;
