@@ -18,6 +18,9 @@ namespace LethalMod
         private float cacheRefreshInterval = 1.5f;
         private bool isESPEnabled = true;
         private bool isEnemyESPEnabled = true;
+        private bool isItemsESPEnabled = true;
+        private bool isPlayerESPEnabled = true;
+        private bool isDoorsESPEnabled = true;
         private bool isPartialESPEnabled = false;
 
         private float lastToggleTime = 0f;
@@ -26,10 +29,13 @@ namespace LethalMod
         #region Keypress logic
         private const int VK_ESP = 0x33; // 3
         private const int VK_ESP_ENEMY = 0x34; // 4
-        private const int VK_ESP_PARTIAL = 0x35; // 5
-        private const int VK_OPEN_DOOR = 0x36; // 6
-        private const int VK_CLOSE_DOORS = 0x37; // 7
-        private const int VK_OPEN_DOORS = 0x38; // 8
+        private const int VK_ESP_PLAYER = 0x35; // 5
+        private const int VK_ESP_DOORS = 0x36; // 6
+        private const int VK_ESP_ITEMS = 0x37; // 7
+        private const int VK_ESP_PARTIAL = 0x38; // 8
+        private const int VK_OPEN_DOOR = 0x46; // f
+        private const int VK_CLOSE_DOORS = 0x58; // x
+        private const int VK_OPEN_DOORS = 0x43; // c
 
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
@@ -82,6 +88,9 @@ namespace LethalMod
         {
             bool isESPKeyDown = IsKeyDown(VK_ESP);
             bool isEnemyESPKeyDown = IsKeyDown(VK_ESP_ENEMY);
+            bool isDoorsESPKeyDown = IsKeyDown(VK_ESP_DOORS);
+            bool isItemsESPKeyDown = IsKeyDown(VK_ESP_ITEMS);
+            bool isPlayerESPKeyDown = IsKeyDown(VK_ESP_PLAYER);
             bool isPartialESPKeyDown = IsKeyDown(VK_ESP_PARTIAL);
             bool isOpenDoorKeyDown = IsKeyDown(VK_OPEN_DOOR);
             bool isCloseDoorsKeyDown = IsKeyDown(VK_CLOSE_DOORS);
@@ -96,6 +105,24 @@ namespace LethalMod
             if (isEnemyESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
                 isEnemyESPEnabled = !isEnemyESPEnabled;
+                lastToggleTime = Time.time;
+            }
+
+            if (isDoorsESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+                isDoorsESPEnabled = !isDoorsESPEnabled;
+                lastToggleTime = Time.time;
+            }
+
+            if (isItemsESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+                isItemsESPEnabled = !isItemsESPEnabled;
+                lastToggleTime = Time.time;
+            }
+
+            if (isPlayerESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+                isPlayerESPEnabled = !isPlayerESPEnabled;
                 lastToggleTime = Time.time;
             }
 
@@ -163,31 +190,49 @@ namespace LethalMod
             var label_text_tmp = isESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 25f, 200f, 30f), $"3 - ESP is: {label_text_tmp}");
-            if (isESPEnabled)
-            {
-                ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
-                ProcessObjects<Landmine>((landmine, vector) => "LANDMINE ");
-                ProcessObjects<Turret>((turret, vector) => "TURRET ");
-                ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
-                ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " - " + grabbableObject.scrapValue + "\n");
-                ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
-                ProcessPlayers();
-            }
 
             label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isEnemyESPEnabled == true ? Color.green : Color.red;
+            GUI.contentColor = isESPEnabled == true && isEnemyESPEnabled == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 40f, 200f, 30f), $"4 - Enemy ESP is: {label_text_tmp}");
-            if (isEnemyESPEnabled)
-                ProcessEnemies();
+
+            label_text_tmp = isPlayerESPEnabled == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled == true && isPlayerESPEnabled == true ? Color.green : Color.red;
+            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Player ESP is: {label_text_tmp}");
+
+            label_text_tmp = isDoorsESPEnabled == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled == true && isDoorsESPEnabled == true ? Color.green : Color.red;
+            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"6 - Doors ESP is: {label_text_tmp}");
+
+            label_text_tmp = isItemsESPEnabled == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled == true && isItemsESPEnabled == true ? Color.green : Color.red;
+            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"7 - Items ESP is: {label_text_tmp}");
 
             label_text_tmp = isPartialESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isPartialESPEnabled == true ? Color.green : Color.red;
+            GUI.contentColor = isESPEnabled == true && isPartialESPEnabled == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Incomplete Path ESP is: {label_text_tmp}");
 
             GUI.contentColor = Color.white;
-            GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Open nearest big door");
-            GUI.Label(new Rect(10f, 85f, 200f, 30f), $"7 - Close all big doors");
-            GUI.Label(new Rect(10f, 100f, 200f, 30f), $"8 - Open/Unlock all doors");
+            GUI.Label(new Rect(10f, 70f, 200f, 30f), $"F - Open nearest big door");
+            GUI.Label(new Rect(10f, 85f, 200f, 30f), $"X - Close all big doors");
+            GUI.Label(new Rect(10f, 100f, 200f, 30f), $"C - Open/Unlock all doors");
+
+            if (isESPEnabled)
+            {
+                ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
+                ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
+                if (isItemsESPEnabled)
+                    ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " - " + grabbableObject.scrapValue + "\n");
+                if (isPlayerESPEnabled)
+                    ProcessPlayers();
+                if (isDoorsESPEnabled)
+                    ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
+                if (isEnemyESPEnabled)
+                {
+                    ProcessEnemies();
+                    ProcessObjects<Landmine>((landmine, vector) => "LANDMINE ");
+                    ProcessObjects<Turret>((turret, vector) => "TURRET ");
+                }
+            }
         }
 
         private Vector3 world_to_screen(Vector3 world)
