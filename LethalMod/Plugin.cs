@@ -201,20 +201,20 @@ namespace LethalMod
 
             label_text_tmp = isDoorsESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isDoorsESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"6 - Doors ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Doors ESP is: {label_text_tmp}");
 
             label_text_tmp = isItemsESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isItemsESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"7 - Items ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 85f, 200f, 30f), $"7 - Items ESP is: {label_text_tmp}");
 
             label_text_tmp = isPartialESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isPartialESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Incomplete Path ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 100f, 200f, 30f), $"5 - Incomplete Path ESP is: {label_text_tmp}");
 
             GUI.contentColor = Color.white;
-            GUI.Label(new Rect(10f, 70f, 200f, 30f), $"F - Open nearest big door");
-            GUI.Label(new Rect(10f, 85f, 200f, 30f), $"X - Close all big doors");
-            GUI.Label(new Rect(10f, 100f, 200f, 30f), $"C - Open/Unlock all doors");
+            GUI.Label(new Rect(10f, 115f, 200f, 30f), $"F - Open nearest big door");
+            GUI.Label(new Rect(10f, 130f, 200f, 30f), $"X - Close all big doors");
+            GUI.Label(new Rect(10f, 145f, 200f, 30f), $"C - Open/Unlock all doors");
 
             if (isESPEnabled)
             {
