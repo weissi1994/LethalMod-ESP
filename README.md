@@ -6,10 +6,13 @@ ESP Mod with pathfinding capabilities.
 
 - Hit `3` to Toggle ESP in general (default: Enabled)
 - Hit `4` to Toggle ESP for Enemies (default: Enabled)
-- Hit `5` to Toggle Rendering of incomplete paths (default: Disabled)
-- Hit `6` to Open closest big door
-- Hit `7` to Close all big doors
-- Hit `8` to Open/Unlock all doors
+- Hit `5` to Toggle ESP for Players (default: Enabled)
+- Hit `6` to Toggle ESP for Doors (default: Enabled)
+- Hit `7` to Toggle ESP for Items (default: Enabled)
+- Hit `8` to Toggle Rendering of incomplete paths (default: Disabled)
+- Hit `F` to Open big door closest to the player
+- Hit `X` to Close all big doors
+- Hit `C` to Open/Unlock all doors
 
 **Features:**
 
