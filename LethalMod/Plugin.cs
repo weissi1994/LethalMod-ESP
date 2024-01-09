@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using GameNetcodeStuff;
 using UnityEngine;
 using System;
@@ -6,7 +7,9 @@ using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 
 
 namespace LethalMod
@@ -27,22 +30,20 @@ namespace LethalMod
         private const float toggleCooldown = 0.5f;
 
         #region Keypress logic
-        private const int VK_ESP = 0x33; // 3
-        private const int VK_ESP_ENEMY = 0x34; // 4
-        private const int VK_ESP_PLAYER = 0x35; // 5
-        private const int VK_ESP_DOORS = 0x36; // 6
-        private const int VK_ESP_ITEMS = 0x37; // 7
-        private const int VK_ESP_PARTIAL = 0x38; // 8
-        private const int VK_OPEN_DOOR = 0x46; // f
-        private const int VK_CLOSE_DOORS = 0x58; // x
-        private const int VK_OPEN_DOORS = 0x43; // c
+        public static string[] keybinds;
+        private ConfigEntry<string> config_KeyESP;
+        private ConfigEntry<string> config_KeyESPEnemies;
+        private ConfigEntry<string> config_KeyESPPlayers;
+        private ConfigEntry<string> config_KeyESPDoors;
+        private ConfigEntry<string> config_KeyESPItems;
+        private ConfigEntry<string> config_KeyESPPartial;
+        private ConfigEntry<string> config_KeyOpenCloseDoor;
+        private ConfigEntry<string> config_KeyOpenAllDoors;
+        private ConfigEntry<string> config_KeyCloseAllDoors;
 
-        [DllImport("user32.dll")]
-        private static extern short GetAsyncKeyState(int vKey);
-
-        private bool IsKeyDown(int keyCode)
+        private bool IsKeyDown(string key)
         {
-            return (GetAsyncKeyState(keyCode) & 0x8000) > 0;
+            return InputControlExtensions.IsPressed(((InputControl)Keyboard.current)[key], 0f);
         }
         #endregion
 
@@ -50,7 +51,31 @@ namespace LethalMod
         {
             // Plugin startup logic
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            ConfigFile();
             StartCoroutine(CacheRefreshRoutine());
+        }
+
+        private void ConfigFile()
+        {
+            keybinds = new string[9];
+            config_KeyESP = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Enable ESP", "3", (ConfigDescription)null);
+            keybinds[0] = config_KeyESP.Value.Replace(" ", "");
+            config_KeyESPEnemies = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Enemy ESP", "4", (ConfigDescription)null);
+            keybinds[1] = config_KeyESPEnemies.Value.Replace(" ", "");
+            config_KeyESPPlayers = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Player ESP", "5", (ConfigDescription)null);
+            keybinds[2] = config_KeyESPPlayers.Value.Replace(" ", "");
+            config_KeyESPDoors = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Door ESP", "6", (ConfigDescription)null);
+            keybinds[3] = config_KeyESPDoors.Value.Replace(" ", "");
+            config_KeyESPItems = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Items ESP", "7", (ConfigDescription)null);
+            keybinds[4] = config_KeyESPItems.Value.Replace(" ", "");
+            config_KeyESPPartial = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle incomplete paths", "8", (ConfigDescription)null);
+            keybinds[5] = config_KeyESPPartial.Value.Replace(" ", "");
+            config_KeyOpenCloseDoor = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Open closest door to player", "f", (ConfigDescription)null);
+            keybinds[6] = config_KeyOpenCloseDoor.Value.Replace(" ", "");
+            config_KeyOpenAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Open all doors", "c", (ConfigDescription)null);
+            keybinds[7] = config_KeyOpenAllDoors.Value.Replace(" ", "");
+            config_KeyCloseAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Close all doors", "x", (ConfigDescription)null);
+            keybinds[8] = config_KeyCloseAllDoors.Value.Replace(" ", "");
         }
 
         #region Cache
@@ -76,6 +101,7 @@ namespace LethalMod
             CacheObjects<EnemyAI>();
             CacheObjects<TerminalAccessibleObject>();
             CacheObjects<DoorLock>();
+            // TODO: cache paths
         }
 
         void CacheObjects<T>() where T : Component
@@ -86,15 +112,15 @@ namespace LethalMod
 
         public void Update()
         {
-            bool isESPKeyDown = IsKeyDown(VK_ESP);
-            bool isEnemyESPKeyDown = IsKeyDown(VK_ESP_ENEMY);
-            bool isDoorsESPKeyDown = IsKeyDown(VK_ESP_DOORS);
-            bool isItemsESPKeyDown = IsKeyDown(VK_ESP_ITEMS);
-            bool isPlayerESPKeyDown = IsKeyDown(VK_ESP_PLAYER);
-            bool isPartialESPKeyDown = IsKeyDown(VK_ESP_PARTIAL);
-            bool isOpenDoorKeyDown = IsKeyDown(VK_OPEN_DOOR);
-            bool isCloseDoorsKeyDown = IsKeyDown(VK_CLOSE_DOORS);
-            bool isOpenDoorsKeyDown = IsKeyDown(VK_OPEN_DOORS);
+            bool isESPKeyDown = IsKeyDown(keybinds[0]);
+            bool isEnemyESPKeyDown = IsKeyDown(keybinds[1]);
+            bool isPlayerESPKeyDown = IsKeyDown(keybinds[2]);
+            bool isDoorsESPKeyDown = IsKeyDown(keybinds[3]);
+            bool isItemsESPKeyDown = IsKeyDown(keybinds[4]);
+            bool isPartialESPKeyDown = IsKeyDown(keybinds[5]);
+            bool isOpenDoorKeyDown = IsKeyDown(keybinds[6]);
+            bool isOpenDoorsKeyDown = IsKeyDown(keybinds[7]);
+            bool isCloseDoorsKeyDown = IsKeyDown(keybinds[8]);
 
             if (isESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
@@ -189,32 +215,32 @@ namespace LethalMod
         {
             var label_text_tmp = isESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 25f, 200f, 30f), $"3 - ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 25f, 200f, 30f), $"{keybinds[0]} - ESP is: {label_text_tmp}");
 
             label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isEnemyESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 40f, 200f, 30f), $"4 - Enemy ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 40f, 200f, 30f), $"{keybinds[1]} - Enemy ESP is: {label_text_tmp}");
 
             label_text_tmp = isPlayerESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isPlayerESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"5 - Player ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 55f, 200f, 30f), $"{keybinds[2]} - Player ESP is: {label_text_tmp}");
 
             label_text_tmp = isDoorsESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isDoorsESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 70f, 200f, 30f), $"6 - Doors ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 70f, 200f, 30f), $"{keybinds[3]} - Doors ESP is: {label_text_tmp}");
 
             label_text_tmp = isItemsESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isItemsESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 85f, 200f, 30f), $"7 - Items ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 85f, 200f, 30f), $"{keybinds[4]} - Items ESP is: {label_text_tmp}");
 
             label_text_tmp = isPartialESPEnabled == true ? "On" : "Off";
             GUI.contentColor = isESPEnabled == true && isPartialESPEnabled == true ? Color.green : Color.red;
-            GUI.Label(new Rect(10f, 100f, 200f, 30f), $"5 - Incomplete Path ESP is: {label_text_tmp}");
+            GUI.Label(new Rect(10f, 100f, 200f, 30f), $"{keybinds[5]} - Incomplete Path ESP is: {label_text_tmp}");
 
             GUI.contentColor = Color.white;
-            GUI.Label(new Rect(10f, 115f, 200f, 30f), $"F - Open nearest big door");
-            GUI.Label(new Rect(10f, 130f, 200f, 30f), $"X - Close all big doors");
-            GUI.Label(new Rect(10f, 145f, 200f, 30f), $"C - Open/Unlock all doors");
+            GUI.Label(new Rect(10f, 115f, 200f, 30f), $"{keybinds[6]} - Open nearest big door");
+            GUI.Label(new Rect(10f, 130f, 200f, 30f), $"{keybinds[7]} - Close all big doors");
+            GUI.Label(new Rect(10f, 145f, 200f, 30f), $"{keybinds[8]} - Open/Unlock all doors");
 
             if (isESPEnabled)
             {
