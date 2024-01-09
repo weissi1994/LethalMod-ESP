@@ -8,8 +8,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Utilities;
 
 
 namespace LethalMod
@@ -18,6 +16,7 @@ namespace LethalMod
     public class Plugin : BaseUnityPlugin
     {
         private Dictionary<Type, List<Component>> objectCache = new Dictionary<Type, List<Component>>();
+        private Dictionary<Type, Dictionary<Component, NavMeshPath>> pathCache = new Dictionary<Type, Dictionary<Component, NavMeshPath>>();
         private float cacheRefreshInterval = 1.5f;
         private bool isESPEnabled = true;
         private bool isEnemyESPEnabled = true;
@@ -101,12 +100,70 @@ namespace LethalMod
             CacheObjects<EnemyAI>();
             CacheObjects<TerminalAccessibleObject>();
             CacheObjects<DoorLock>();
-            // TODO: cache paths
+            pathCache.Clear();
+            CachePaths<EntranceTeleport>();
+            CachePaths<GrabbableObject>();
+            //CachePaths<PlayerControllerB>();
+            //CachePaths<EnemyAI>();
         }
 
         void CacheObjects<T>() where T : Component
         {
             objectCache[typeof(T)] = new List<Component>(FindObjectsOfType<T>());
+        }
+
+        void CachePaths<T>() where T : Component
+        {
+            if (GameNetworkManager.Instance.localPlayerController == null)
+                return;
+
+            if (!objectCache.TryGetValue(typeof(T), out var cachedObjects))
+                return;
+
+            NavMeshAgent agent = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<NavMeshAgent>();
+            if (agent == null)
+            {
+                Logger.LogInfo("Attaching NavMeshAgent to Player");
+                agent = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<NavMeshAgent>();
+                agent.updatePosition = false;
+                agent.updateRotation = false;
+                agent.updateUpAxis = false;
+            }
+            agent.transform.position = GameNetworkManager.Instance.localPlayerController.transform.position;
+            agent.nextPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
+            agent.enabled = false;
+            agent.enabled = true;
+            NavMeshPath path;
+
+            foreach (T obj in cachedObjects.Cast<T>())
+            {
+                try
+                {
+                    path = new NavMeshPath();
+                    Vector3 target_pos = obj.transform.position;
+
+                    if (obj is EntranceTeleport)
+                        target_pos.y = target_pos.y - 1.5f;
+                    if (obj is GrabbableObject && obj.name.Contains("Apparatus"))
+                        target_pos.y = target_pos.y - 3;
+                    agent.CalculatePath(target_pos, path);
+                    if (path.corners.Length < 3) //if the path has 1 or no corners, there is no need
+                        continue;
+                    if (path.status == NavMeshPathStatus.PathComplete)
+                    {
+                        pathCache[typeof(T)][obj] = path;
+                    }
+                    else if (isPartialESPEnabled && path.status == NavMeshPathStatus.PathPartial)
+                    {
+                        pathCache[typeof(T)][obj] = path;
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    Logger.LogError($"Failed to calculate path for {obj.name}:\n{e.Message}");
+                    continue;
+                }
+            }
         }
         #endregion
 
@@ -325,16 +382,11 @@ namespace LethalMod
                         DrawLabel(screen, label, GetColorForObject<T>(), distance);
                         if (obj is EntranceTeleport)
                         {
-                            Vector3 tmp = obj.transform.position;
-                            tmp.y = tmp.y - 1.5f;
-                            DrawPath(tmp, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                            DrawPath(obj, GetColorForObject<T>(), 2f);
                         }
                         else if (obj is GrabbableObject && GameNetworkManager.Instance.localPlayerController.isInsideFactory)
                         {
-                            Vector3 target_pos = obj.transform.position;
-                            if (label.Contains("Apparatus"))
-                                target_pos.y = target_pos.y - 3;
-                            DrawPath(target_pos, GameNetworkManager.Instance.localPlayerController.transform.position, GetColorForObject<T>(), 2f);
+                            DrawPath(obj, GetColorForObject<T>(), 2f);
                         }
                     }
                 }
@@ -432,50 +484,34 @@ namespace LethalMod
             }
         }
 
-        private void DrawPath(Vector3 target, Vector3 start, Color color, float width)
+        private void DrawPath<T>(T obj, Color color, float width) where T : Component
         {
-            if (GameNetworkManager.Instance.localPlayerController == null)
-            {
-                //Debug.LogWarning($"Not possible to do pathfinding here");
+            if (!pathCache.TryGetValue(typeof(T), out var cachedObjects))
                 return;
-            }
-            NavMeshAgent agent = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<NavMeshAgent>();
-            if (agent == null)
-            {
-                agent = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<NavMeshAgent>();
-            }
-            agent.updatePosition = false;
-            agent.updateRotation = false;
-            agent.updateUpAxis = false;
-            var path = new NavMeshPath();
-            agent.transform.position = start;
-            agent.nextPosition = start;
-            agent.enabled = false;
-            agent.enabled = true;
-            agent.CalculatePath(target, path);
-            if (path.corners.Length < 3) //if the path has 1 or no corners, there is no need
+            if (!cachedObjects.TryGetValue(obj, out var cachedPath))
                 return;
+
             Vector2 previous;
             Vector2 next;
-            if (path.status == NavMeshPathStatus.PathComplete)
+            if (cachedPath.status == NavMeshPathStatus.PathComplete)
             {
-                previous = world_to_screen(path.corners[1]);
-                for (int i = 2; i < path.corners.Length - 1; i++)
+                previous = world_to_screen(cachedPath.corners[1]);
+                for (int i = 2; i < cachedPath.corners.Length - 1; i++)
                 {
-                    var screen_pos = world_to_screen(path.corners[i]);
+                    var screen_pos = world_to_screen(cachedPath.corners[i]);
                     next = new Vector2(screen_pos.x, screen_pos.y);
                     render.draw_line(previous, next, color, width);
                     previous = next;
                 }
-                Vector3 end_pos = world_to_screen(target);
+                Vector3 end_pos = world_to_screen(obj.transform.position);
                 render.draw_line(previous, end_pos, color, width);
             }
-            else if (isPartialESPEnabled && path.status == NavMeshPathStatus.PathPartial)
+            else if (isPartialESPEnabled && cachedPath.status == NavMeshPathStatus.PathPartial)
             {
-                previous = world_to_screen(path.corners[1]);
-                for (int i = 2; i < path.corners.Length - 1; i++)
+                previous = world_to_screen(cachedPath.corners[1]);
+                for (int i = 2; i < cachedPath.corners.Length - 1; i++)
                 {
-                    var screen_pos = world_to_screen(path.corners[i]);
+                    var screen_pos = world_to_screen(cachedPath.corners[i]);
                     next = new Vector2(screen_pos.x, screen_pos.y);
                     render.draw_line(previous, next, Color.yellow, width);
                     previous = next;
