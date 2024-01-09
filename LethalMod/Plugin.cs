@@ -101,8 +101,15 @@ namespace LethalMod
             CacheObjects<TerminalAccessibleObject>();
             CacheObjects<DoorLock>();
             pathCache.Clear();
-            CachePaths<EntranceTeleport>();
-            CachePaths<GrabbableObject>();
+            try
+            {
+                CachePaths<EntranceTeleport>();
+                CachePaths<GrabbableObject>();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Failed to calculate paths: {e.Message}");
+            }
             //CachePaths<PlayerControllerB>();
             //CachePaths<EnemyAI>();
         }
@@ -114,6 +121,9 @@ namespace LethalMod
 
         void CachePaths<T>() where T : Component
         {
+            if (GameNetworkManager.Instance == null)
+                return;
+            pathCache[typeof(T)] = new Dictionary<Component, NavMeshPath>();
             if (GameNetworkManager.Instance.localPlayerController == null)
                 return;
 
