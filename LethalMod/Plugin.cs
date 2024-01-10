@@ -306,8 +306,8 @@ namespace LethalMod
 
             GUI.contentColor = Color.white;
             GUI.Label(new Rect(10f, 115f, 200f, 30f), $"{keybinds[6]} - Open nearest big door");
-            GUI.Label(new Rect(10f, 130f, 200f, 30f), $"{keybinds[7]} - Close all big doors");
-            GUI.Label(new Rect(10f, 145f, 200f, 30f), $"{keybinds[8]} - Open/Unlock all doors");
+            GUI.Label(new Rect(10f, 130f, 200f, 30f), $"{keybinds[7]} - Open/Unlock all doors");
+            GUI.Label(new Rect(10f, 145f, 200f, 30f), $"{keybinds[8]} - Close all big doors");
 
             if (isESPEnabled)
             {
