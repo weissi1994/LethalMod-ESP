@@ -49,9 +49,10 @@ namespace LethalMod
         private void Awake()
         {
             // Plugin startup logic
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            Logger.LogInfo($"Loading {PluginInfo.PLUGIN_GUID} - {PluginInfo.PLUGIN_VERSION}.");
             ConfigFile();
             StartCoroutine(CacheRefreshRoutine());
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
         private void ConfigFile()
