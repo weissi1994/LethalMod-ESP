@@ -18,12 +18,13 @@ namespace LethalMod
         private Dictionary<Type, List<Component>> objectCache = new Dictionary<Type, List<Component>>();
         private Dictionary<Type, Dictionary<Component, NavMeshPath>> pathCache = new Dictionary<Type, Dictionary<Component, NavMeshPath>>();
         private float cacheRefreshInterval = 1.5f;
-        private bool isESPEnabled = true;
-        private bool isEnemyESPEnabled = true;
-        private bool isItemsESPEnabled = true;
-        private bool isPlayerESPEnabled = true;
-        private bool isDoorsESPEnabled = true;
-        private bool isPartialESPEnabled = false;
+
+        private static ConfigEntry<bool> isESPEnabled;
+        private static ConfigEntry<bool> isEnemyESPEnabled;
+        private static ConfigEntry<bool> isItemsESPEnabled;
+        private static ConfigEntry<bool> isPlayerESPEnabled;
+        private static ConfigEntry<bool> isDoorsESPEnabled;
+        private static ConfigEntry<bool> isPartialESPEnabled;
 
         private float lastToggleTime = 0f;
         private const float toggleCooldown = 0.5f;
@@ -57,24 +58,30 @@ namespace LethalMod
 
         private void ConfigFile()
         {
+            isESPEnabled = Config.Bind("ESP", "Enable ESP", true, "Enable ESP?");
+            isEnemyESPEnabled = Config.Bind("ESP", "Enable Enemy ESP", true, "Enable Enemy ESP?");
+            isItemsESPEnabled = Config.Bind("ESP", "Enable Items ESP", true, "Enable Items ESP?");
+            isPlayerESPEnabled = Config.Bind("ESP", "Enable Players ESP", true, "Enable Players ESP?");
+            isDoorsESPEnabled = Config.Bind("ESP", "Enable Doors ESP", true, "Enable Doors ESP?");
+            isPartialESPEnabled = Config.Bind("ESP", "Enable Partial ESP", false, "Enable Partial ESP?");
             keybinds = new string[9];
-            config_KeyESP = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Enable ESP", "3", (ConfigDescription)null);
+            config_KeyESP = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Enable ESP", "3", (ConfigDescription)null);
             keybinds[0] = config_KeyESP.Value.Replace(" ", "");
-            config_KeyESPEnemies = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Enemy ESP", "4", (ConfigDescription)null);
+            config_KeyESPEnemies = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle Enemy ESP", "4", (ConfigDescription)null);
             keybinds[1] = config_KeyESPEnemies.Value.Replace(" ", "");
-            config_KeyESPPlayers = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Player ESP", "5", (ConfigDescription)null);
+            config_KeyESPPlayers = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle Player ESP", "5", (ConfigDescription)null);
             keybinds[2] = config_KeyESPPlayers.Value.Replace(" ", "");
-            config_KeyESPDoors = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Door ESP", "6", (ConfigDescription)null);
+            config_KeyESPDoors = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle Door ESP", "6", (ConfigDescription)null);
             keybinds[3] = config_KeyESPDoors.Value.Replace(" ", "");
-            config_KeyESPItems = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle Items ESP", "7", (ConfigDescription)null);
+            config_KeyESPItems = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle Items ESP", "7", (ConfigDescription)null);
             keybinds[4] = config_KeyESPItems.Value.Replace(" ", "");
-            config_KeyESPPartial = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Toggle incomplete paths", "8", (ConfigDescription)null);
+            config_KeyESPPartial = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle incomplete paths", "8", (ConfigDescription)null);
             keybinds[5] = config_KeyESPPartial.Value.Replace(" ", "");
-            config_KeyOpenCloseDoor = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Open closest door to player", "f", (ConfigDescription)null);
+            config_KeyOpenCloseDoor = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Open closest door to player", "f", (ConfigDescription)null);
             keybinds[6] = config_KeyOpenCloseDoor.Value.Replace(" ", "");
-            config_KeyOpenAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Open all doors", "c", (ConfigDescription)null);
+            config_KeyOpenAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Open all doors", "c", (ConfigDescription)null);
             keybinds[7] = config_KeyOpenAllDoors.Value.Replace(" ", "");
-            config_KeyCloseAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("ESP", "Close all doors", "x", (ConfigDescription)null);
+            config_KeyCloseAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Close all doors", "x", (ConfigDescription)null);
             keybinds[8] = config_KeyCloseAllDoors.Value.Replace(" ", "");
         }
 
@@ -164,7 +171,7 @@ namespace LethalMod
                     {
                         pathCache[typeof(T)][obj] = path;
                     }
-                    else if (isPartialESPEnabled && path.status == NavMeshPathStatus.PathPartial)
+                    else if (isPartialESPEnabled.Value && path.status == NavMeshPathStatus.PathPartial)
                     {
                         pathCache[typeof(T)][obj] = path;
                     }
@@ -192,37 +199,37 @@ namespace LethalMod
 
             if (isESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isESPEnabled = !isESPEnabled;
+                isESPEnabled.Value = !isESPEnabled.Value;
                 lastToggleTime = Time.time;
             }
 
             if (isEnemyESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isEnemyESPEnabled = !isEnemyESPEnabled;
+                isEnemyESPEnabled.Value = !isEnemyESPEnabled.Value;
                 lastToggleTime = Time.time;
             }
 
             if (isDoorsESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isDoorsESPEnabled = !isDoorsESPEnabled;
+                isDoorsESPEnabled.Value = !isDoorsESPEnabled.Value;
                 lastToggleTime = Time.time;
             }
 
             if (isItemsESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isItemsESPEnabled = !isItemsESPEnabled;
+                isItemsESPEnabled.Value = !isItemsESPEnabled.Value;
                 lastToggleTime = Time.time;
             }
 
             if (isPlayerESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isPlayerESPEnabled = !isPlayerESPEnabled;
+                isPlayerESPEnabled.Value = !isPlayerESPEnabled.Value;
                 lastToggleTime = Time.time;
             }
 
             if (isPartialESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
-                isPartialESPEnabled = !isPartialESPEnabled;
+                isPartialESPEnabled.Value = !isPartialESPEnabled.Value;
                 lastToggleTime = Time.time;
             }
 
@@ -281,28 +288,28 @@ namespace LethalMod
 
         public void OnGUI()
         {
-            var label_text_tmp = isESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isESPEnabled == true ? Color.green : Color.red;
+            var label_text_tmp = isESPEnabled.Value == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled.Value == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 25f, 200f, 30f), $"{keybinds[0]} - ESP is: {label_text_tmp}");
 
-            label_text_tmp = isEnemyESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isESPEnabled == true && isEnemyESPEnabled == true ? Color.green : Color.red;
+            label_text_tmp = isEnemyESPEnabled.Value == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled.Value == true && isEnemyESPEnabled.Value == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 40f, 200f, 30f), $"{keybinds[1]} - Enemy ESP is: {label_text_tmp}");
 
-            label_text_tmp = isPlayerESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isESPEnabled == true && isPlayerESPEnabled == true ? Color.green : Color.red;
+            label_text_tmp = isPlayerESPEnabled.Value == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled.Value == true && isPlayerESPEnabled.Value == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 55f, 200f, 30f), $"{keybinds[2]} - Player ESP is: {label_text_tmp}");
 
-            label_text_tmp = isDoorsESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isESPEnabled == true && isDoorsESPEnabled == true ? Color.green : Color.red;
+            label_text_tmp = isDoorsESPEnabled.Value == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled.Value == true && isDoorsESPEnabled.Value == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 70f, 200f, 30f), $"{keybinds[3]} - Doors ESP is: {label_text_tmp}");
 
-            label_text_tmp = isItemsESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isESPEnabled == true && isItemsESPEnabled == true ? Color.green : Color.red;
+            label_text_tmp = isItemsESPEnabled.Value == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled.Value == true && isItemsESPEnabled.Value == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 85f, 200f, 30f), $"{keybinds[4]} - Items ESP is: {label_text_tmp}");
 
-            label_text_tmp = isPartialESPEnabled == true ? "On" : "Off";
-            GUI.contentColor = isESPEnabled == true && isPartialESPEnabled == true ? Color.green : Color.red;
+            label_text_tmp = isPartialESPEnabled.Value == true ? "On" : "Off";
+            GUI.contentColor = isESPEnabled.Value == true && isPartialESPEnabled.Value == true ? Color.green : Color.red;
             GUI.Label(new Rect(10f, 100f, 200f, 30f), $"{keybinds[5]} - Incomplete Path ESP is: {label_text_tmp}");
 
             GUI.contentColor = Color.white;
@@ -310,17 +317,17 @@ namespace LethalMod
             GUI.Label(new Rect(10f, 130f, 200f, 30f), $"{keybinds[7]} - Open/Unlock all doors");
             GUI.Label(new Rect(10f, 145f, 200f, 30f), $"{keybinds[8]} - Close all big doors");
 
-            if (isESPEnabled)
+            if (isESPEnabled.Value)
             {
                 ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
                 ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
-                if (isItemsESPEnabled)
+                if (isItemsESPEnabled.Value)
                     ProcessObjects<GrabbableObject>((grabbableObject, vector) => grabbableObject.itemProperties.itemName + " - " + grabbableObject.scrapValue + "\n");
-                if (isPlayerESPEnabled)
+                if (isPlayerESPEnabled.Value)
                     ProcessPlayers();
-                if (isDoorsESPEnabled)
+                if (isDoorsESPEnabled.Value)
                     ProcessObjects<EntranceTeleport>((entrance, vector) => entrance.isEntranceToBuilding ? " Entrance " : " Exit ");
-                if (isEnemyESPEnabled)
+                if (isEnemyESPEnabled.Value)
                 {
                     ProcessEnemies();
                     ProcessObjects<Landmine>((landmine, vector) => "LANDMINE ");
@@ -517,7 +524,7 @@ namespace LethalMod
                 Vector3 end_pos = world_to_screen(obj.transform.position);
                 render.draw_line(previous, end_pos, color, width);
             }
-            else if (isPartialESPEnabled && cachedPath.status == NavMeshPathStatus.PathPartial)
+            else if (isPartialESPEnabled.Value && cachedPath.status == NavMeshPathStatus.PathPartial)
             {
                 previous = world_to_screen(cachedPath.corners[1]);
                 for (int i = 2; i < cachedPath.corners.Length - 1; i++)
