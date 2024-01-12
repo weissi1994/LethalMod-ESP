@@ -90,6 +90,7 @@ namespace LethalMod
         {
             while (true)
             {
+                Logger.LogInfo($"Refreshing object cache.");
                 RefreshCache();
                 yield return new WaitForSeconds(cacheRefreshInterval);
             }
@@ -125,6 +126,7 @@ namespace LethalMod
         void CacheObjects<T>() where T : Component
         {
             objectCache[typeof(T)] = new List<Component>(FindObjectsOfType<T>());
+            Logger.LogInfo($"Cached {objectCache[typeof(T)].Count} objects of type {typeof(T)}.");
         }
 
         void CachePaths<T>() where T : Component
@@ -319,6 +321,7 @@ namespace LethalMod
 
             if (isESPEnabled.Value)
             {
+                Logger.LogInfo($"Rendering ESP.");
                 ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
                 ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
                 if (isItemsESPEnabled.Value)
