@@ -113,8 +113,11 @@ namespace LethalMod
             pathCache.Clear();
             try
             {
-                CachePaths<EntranceTeleport>();
-                CachePaths<GrabbableObject>();
+                if (GameNetworkManager.Instance?.localPlayerController?.gameplayCamera != null)
+                {
+                    CachePaths<EntranceTeleport>();
+                    CachePaths<GrabbableObject>();
+                }
             }
             catch (Exception e)
             {
