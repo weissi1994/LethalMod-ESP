@@ -182,7 +182,7 @@ namespace LethalMod
                 }
                 catch (NullReferenceException e)
                 {
-                    Logger.LogError($"Failed to calculate path for {obj.name}:\n{e.Message}");
+                    // Logger.LogError($"Failed to calculate path for {obj.name}:\n{e.Message}");
                     continue;
                 }
             }
