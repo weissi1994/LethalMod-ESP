@@ -186,6 +186,8 @@ namespace LethalMod
                     continue;
                 }
             }
+            if (pathCache[typeof(T)].Count > 0)
+                Logger.LogInfo($"Cached {pathCache[typeof(T)].Count} ESP Paths for type {typeof(T)}.");
         }
         #endregion
 
