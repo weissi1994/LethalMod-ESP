@@ -17,7 +17,7 @@ namespace LethalMod
     {
         private Dictionary<Type, List<Component>> objectCache = new Dictionary<Type, List<Component>>();
         private Dictionary<Type, Dictionary<Component, NavMeshPath>> pathCache = new Dictionary<Type, Dictionary<Component, NavMeshPath>>();
-        private float cacheRefreshInterval = 1.5f;
+        private float cacheRefreshInterval = 2.5f;
 
         private static ConfigEntry<bool> isESPEnabled;
         private static ConfigEntry<bool> isEnemyESPEnabled;
@@ -88,9 +88,10 @@ namespace LethalMod
         #region Cache
         IEnumerator CacheRefreshRoutine()
         {
+            Logger.LogInfo("Starting background caching");
             while (true)
             {
-                Logger.LogInfo($"Refreshing object cache.");
+                Logger.LogDebug($"Refreshing object cache.");
                 RefreshCache();
                 yield return new WaitForSeconds(cacheRefreshInterval);
             }
@@ -126,7 +127,8 @@ namespace LethalMod
         void CacheObjects<T>() where T : Component
         {
             objectCache[typeof(T)] = new List<Component>(FindObjectsOfType<T>());
-            Logger.LogInfo($"Cached {objectCache[typeof(T)].Count} objects of type {typeof(T)}.");
+            if (objectCache[typeof(T)].Count > 0)
+                Logger.LogInfo($"Cached {objectCache[typeof(T)].Count} objects of type {typeof(T)}.");
         }
 
         void CachePaths<T>() where T : Component
@@ -321,7 +323,7 @@ namespace LethalMod
 
             if (isESPEnabled.Value)
             {
-                Logger.LogInfo($"Rendering ESP.");
+                Logger.LogDebug($"Rendering ESP.");
                 ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
                 ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
                 if (isItemsESPEnabled.Value)
