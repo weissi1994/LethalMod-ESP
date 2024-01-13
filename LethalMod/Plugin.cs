@@ -168,7 +168,7 @@ namespace LethalMod
                     Vector3 target_pos = obj.transform.position;
 
                     if (obj is EntranceTeleport)
-                        target_pos.y = target_pos.y - 1.8f;
+                        target_pos.y = target_pos.y - 1.5f;
                     if (obj is GrabbableObject && obj.name.Contains("Apparatus"))
                         target_pos.y = target_pos.y - 3;
                     agent.CalculatePath(target_pos, path);
