@@ -343,7 +343,7 @@ namespace LethalMod
 
             if (isESPEnabled.Value)
             {
-                Logger.LogDebug($"Rendering ESP.");
+                //Logger.LogDebug($"Rendering ESP.");
                 ProcessObjects<Terminal>((terminal, vector) => "SHIP TERMINAL ");
                 ProcessObjects<SteamValveHazard>((valve, vector) => "Steam Valve ");
                 if (isItemsESPEnabled.Value)
