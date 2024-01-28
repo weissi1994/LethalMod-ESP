@@ -93,7 +93,7 @@ namespace LethalMod
             keybinds[7] = config_KeyOpenAllDoors.Value.Replace(" ", "");
             config_KeyCloseAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Close all doors", "x", (ConfigDescription)null);
             keybinds[8] = config_KeyCloseAllDoors.Value.Replace(" ", "");
-            config_KeyUI = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle UI", "p", (ConfigDescription)null);
+            config_KeyUI = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle UI", "n", (ConfigDescription)null);
             keybinds[9] = config_KeyUI.Value.Replace(" ", "");
         }
 
@@ -400,6 +400,10 @@ namespace LethalMod
             {
                 try
                 {
+                    if (GameNetworkManager.Instance.localPlayerController == null || obj == null)
+                    {
+                        continue;
+                    }
                     if (obj is GrabbableObject GO && (GO.isPocketed || GO.isHeld || (GO.itemProperties.itemName == "Gift" && !GO.gameObject.GetComponent<Renderer>().isVisible)))
                     {
                         continue;
@@ -450,6 +454,10 @@ namespace LethalMod
             {
                 try
                 {
+                    if (GameNetworkManager.Instance.localPlayerController == null || player == null)
+                    {
+                        continue;
+                    }
                     if (player.isPlayerDead || player.IsLocalPlayer || player.playerUsername == GameNetworkManager.Instance.localPlayerController.playerUsername || player.disconnectedMidGame || player.playerUsername.Contains("Player #"))
                     {
                         continue;
