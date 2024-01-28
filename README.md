@@ -2,6 +2,11 @@
 
 ESP Mod with pathfinding capabilities.
 
+> If you have issues with the mod not loading properly, please try also installing
+> [BepInEx_GraphicsSettings](https://thunderstore.io/c/lethal-company/p/BepInEx_Unofficial/BepInEx_GraphicsSettings/) mod and its dependency, [BepInEx_ConfigurationManager](https://thunderstore.io/c/lethal-company/p/BepInEx_Unofficial/BepInEx_ConfigurationManager/).
+>
+> As pointed out by @yumm-dev in #8
+
 **Controls:**
 
 > can be configured in `config/LethalMod.cfg`
