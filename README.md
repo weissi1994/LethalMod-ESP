@@ -26,6 +26,10 @@ ESP Mod with pathfinding capabilities.
 
 > Yellow paths indicate unreachable targets
 
+## Tested with:
+
+- https://thunderstore.io/c/lethal-company/p/LethalMinors/Multiplayer_Modpack/
+
 ---
 
 Inspired by:
