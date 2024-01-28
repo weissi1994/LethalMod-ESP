@@ -448,19 +448,27 @@ namespace LethalMod
 
             foreach (PlayerControllerB player in cachedPlayers.Cast<PlayerControllerB>())
             {
-                if (player.isPlayerDead || player.IsLocalPlayer || player.playerUsername == GameNetworkManager.Instance.localPlayerController.playerUsername || player.disconnectedMidGame || player.playerUsername.Contains("Player #"))
+                try
                 {
-                    continue;
-                }
+                    if (player.isPlayerDead || player.IsLocalPlayer || player.playerUsername == GameNetworkManager.Instance.localPlayerController.playerUsername || player.disconnectedMidGame || player.playerUsername.Contains("Player #"))
+                    {
+                        continue;
+                    }
 
-                Vector3 screen;
-                if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
-                    player.transform.position, out screen))
+                    Vector3 screen;
+                    if (WorldToScreen(GameNetworkManager.Instance.localPlayerController.gameplayCamera,
+                        player.transform.position, out screen))
+                    {
+                        string label = player.playerUsername + " ";
+                        float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, player.transform.position);
+                        distance = (float)Math.Round(distance);
+                        DrawLabel(screen, label, Color.green, distance);
+                    }
+                }
+                catch (NullReferenceException e)
                 {
-                    string label = player.playerUsername + " ";
-                    float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, player.transform.position);
-                    distance = (float)Math.Round(distance);
-                    DrawLabel(screen, label, Color.green, distance);
+                    Logger.LogError($"Failed to render {typeof(T)}:\n{e.Message}");
+                    continue;
                 }
             }
         }
