@@ -475,7 +475,7 @@ namespace LethalMod
                 }
                 catch (NullReferenceException e)
                 {
-                    Logger.LogError($"Failed to render {typeof(T)}:\n{e.Message}");
+                    Logger.LogError($"Failed to render {typeof(PlayerControllerB)}:\n{e.Message}");
                     continue;
                 }
             }
