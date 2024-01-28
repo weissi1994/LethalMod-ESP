@@ -6,6 +6,7 @@ ESP Mod with pathfinding capabilities.
 
 > can be configured in `config/LethalMod.cfg`
 
+- Hit `p` to Toggle UI for ESP (default: Enabled)
 - Hit `3` to Toggle ESP in general (default: Enabled)
 - Hit `4` to Toggle ESP for Enemies (default: Enabled)
 - Hit `5` to Toggle ESP for Players (default: Enabled)
