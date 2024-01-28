@@ -93,7 +93,7 @@ namespace LethalMod
             keybinds[7] = config_KeyOpenAllDoors.Value.Replace(" ", "");
             config_KeyCloseAllDoors = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Close all doors", "x", (ConfigDescription)null);
             keybinds[8] = config_KeyCloseAllDoors.Value.Replace(" ", "");
-            config_KeyUI = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle UI", "n", (ConfigDescription)null);
+            config_KeyUI = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle UI", "p", (ConfigDescription)null);
             keybinds[9] = config_KeyUI.Value.Replace(" ", "");
         }
 
@@ -217,6 +217,13 @@ namespace LethalMod
             bool isOpenDoorKeyDown = IsKeyDown(keybinds[6]);
             bool isOpenDoorsKeyDown = IsKeyDown(keybinds[7]);
             bool isCloseDoorsKeyDown = IsKeyDown(keybinds[8]);
+            bool isUIKeyDown = IsKeyDown(keybinds[9]);
+
+            if (isUIKeyDown && Time.time - lastToggleTime > toggleCooldown)
+            {
+                isUIEnabled.Value = !isUIEnabled.Value;
+                lastToggleTime = Time.time;
+            }
 
             if (isESPKeyDown && Time.time - lastToggleTime > toggleCooldown)
             {
