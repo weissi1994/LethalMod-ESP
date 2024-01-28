@@ -67,6 +67,7 @@ namespace LethalMod
 
         private void ConfigFile()
         {
+            isUIEnabled = Config.Bind("UI", "Enable UI", true, "Enable UI?");
             isESPEnabled = Config.Bind("ESP", "Enable ESP", true, "Enable ESP?");
             isEnemyESPEnabled = Config.Bind("ESP", "Enable Enemy ESP", true, "Enable Enemy ESP?");
             isItemsESPEnabled = Config.Bind("ESP", "Enable Items ESP", true, "Enable Items ESP?");
