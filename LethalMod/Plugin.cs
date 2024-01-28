@@ -318,7 +318,11 @@ namespace LethalMod
         {
             if (isUIEnabled.Value)
             {
-                var label_text_tmp = isESPEnabled.Value == true ? "On" : "Off";
+                var label_text_tmp = isUIEnabled.Value == true ? "On" : "Off";
+                GUI.contentColor = Color.white;
+                GUI.Label(new Rect(10f, 10f, 200f, 30f), $"{keybinds[9]} - UI is: {label_text_tmp}");
+
+                label_text_tmp = isESPEnabled.Value == true ? "On" : "Off";
                 GUI.contentColor = isESPEnabled.Value == true ? Color.green : Color.red;
                 GUI.Label(new Rect(10f, 25f, 200f, 30f), $"{keybinds[0]} - ESP is: {label_text_tmp}");
 
