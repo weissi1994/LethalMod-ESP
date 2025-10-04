@@ -12,11 +12,23 @@ using UnityEngine.InputSystem;
 
 namespace LethalMod
 {
+    /// <summary>
+    /// Main plugin class for the LethalMod. Handles ESP, UI, and other in-game modifications.
+    /// </summary>
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
+        /// <summary>
+        /// Cache for storing game objects to improve performance.
+        /// </summary>
         private Dictionary<Type, List<Component>> objectCache = new Dictionary<Type, List<Component>>();
+        /// <summary>
+        /// Cache for storing calculated NavMesh paths for ESP.
+        /// </summary>
         private Dictionary<Type, Dictionary<Component, NavMeshPath>> pathCache = new Dictionary<Type, Dictionary<Component, NavMeshPath>>();
+        /// <summary>
+        /// Interval in seconds for refreshing the object and path caches.
+        /// </summary>
         private float cacheRefreshInterval = 2.5f;
 
         private static ConfigEntry<bool> isUIEnabled;
@@ -38,6 +50,9 @@ namespace LethalMod
         private const float toggleCooldown = 0.5f;
 
         #region Keypress logic
+        /// <summary>
+        /// Array of keybinds for various actions.
+        /// </summary>
         public static string[] keybinds;
         private ConfigEntry<string> config_KeyUI;
         private ConfigEntry<string> config_KeyESP;
@@ -50,12 +65,20 @@ namespace LethalMod
         private ConfigEntry<string> config_KeyOpenAllDoors;
         private ConfigEntry<string> config_KeyCloseAllDoors;
 
+        /// <summary>
+        /// Checks if a specific key is currently pressed.
+        /// </summary>
+        /// <param name="key">The key to check.</param>
+        /// <returns>True if the key is pressed, false otherwise.</returns>
         private bool IsKeyDown(string key)
         {
             return InputControlExtensions.IsPressed(((InputControl)Keyboard.current)[key], 0f);
         }
         #endregion
 
+        /// <summary>
+        /// Called when the plugin is first loaded.
+        /// </summary>
         private void Awake()
         {
             // Plugin startup logic
@@ -65,6 +88,9 @@ namespace LethalMod
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
+        /// <summary>
+        /// Binds the configuration settings for the mod.
+        /// </summary>
         private void ConfigFile()
         {
             isUIEnabled = Config.Bind("UI", "Enable UI", true, "Enable UI?");
@@ -98,6 +124,10 @@ namespace LethalMod
         }
 
         #region Cache
+        /// <summary>
+        /// Coroutine that periodically refreshes the object and path caches.
+        /// </summary>
+        /// <returns>An IEnumerator for the coroutine.</returns>
         IEnumerator CacheRefreshRoutine()
         {
             Logger.LogInfo("Starting background caching");
@@ -109,6 +139,9 @@ namespace LethalMod
             }
         }
 
+        /// <summary>
+        /// Refreshes the object and path caches.
+        /// </summary>
         void RefreshCache()
         {
             objectCache.Clear();
@@ -139,6 +172,10 @@ namespace LethalMod
             //CachePaths<EnemyAI>();
         }
 
+        /// <summary>
+        /// Caches all game objects of a specific type.
+        /// </summary>
+        /// <typeparam name="T">The type of component to cache.</typeparam>
         void CacheObjects<T>() where T : Component
         {
             objectCache[typeof(T)] = new List<Component>(FindObjectsOfType<T>());
@@ -146,6 +183,10 @@ namespace LethalMod
                 Logger.LogInfo($"Cached {objectCache[typeof(T)].Count} objects of type {typeof(T)}.");
         }
 
+        /// <summary>
+        /// Calculates and caches NavMesh paths for objects of a specific type.
+        /// </summary>
+        /// <typeparam name="T">The type of component to calculate paths for.</typeparam>
         void CachePaths<T>() where T : Component
         {
             if (GameNetworkManager.Instance == null)
@@ -206,6 +247,9 @@ namespace LethalMod
         }
         #endregion
 
+        /// <summary>
+        /// Called every frame. Handles keypresses and toggles for various features.
+        /// </summary>
         public void Update()
         {
             bool isESPKeyDown = IsKeyDown(keybinds[0]);
@@ -314,6 +358,9 @@ namespace LethalMod
             }
         }
 
+        /// <summary>
+        /// Called for rendering and handling GUI events.
+        /// </summary>
         public void OnGUI()
         {
             if (isUIEnabled.Value)
@@ -372,6 +419,11 @@ namespace LethalMod
             }
         }
 
+        /// <summary>
+        /// Converts a world position to a screen position.
+        /// </summary>
+        /// <param name="world">The world position to convert.</param>
+        /// <returns>The screen position.</returns>
         private Vector3 world_to_screen(Vector3 world)
         {
             Vector3 screen = GameNetworkManager.Instance.localPlayerController.gameplayCamera.WorldToViewportPoint(world);
@@ -384,12 +436,24 @@ namespace LethalMod
             return screen;
         }
 
+        /// <summary>
+        /// Calculates the distance between the local player and a world position.
+        /// </summary>
+        /// <param name="world_position">The world position to calculate the distance to.</param>
+        /// <returns>The distance in meters.</returns>
         private float distance(Vector3 world_position)
         {
             return Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, world_position);
         }
         #region ESP Drawing
 
+        /// <summary>
+        /// Converts a world position to a screen position, with an out parameter for the screen position.
+        /// </summary>
+        /// <param name="camera">The camera to use for the conversion.</param>
+        /// <param name="world">The world position to convert.</param>
+        /// <param name="screen">The output screen position.</param>
+        /// <returns>True if the world position is visible on the screen, false otherwise.</returns>
         public static bool WorldToScreen(Camera camera, Vector3 world, out Vector3 screen)
         {
             screen = camera.WorldToViewportPoint(world);
@@ -402,6 +466,11 @@ namespace LethalMod
             return screen.z > 0;
         }
 
+        /// <summary>
+        /// Processes and draws ESP for a given type of object.
+        /// </summary>
+        /// <typeparam name="T">The type of component to process.</typeparam>
+        /// <param name="labelBuilder">A function that builds the label for the object.</param>
         private void ProcessObjects<T>(Func<T, Vector3, string> labelBuilder) where T : Component
         {
             if (!objectCache.TryGetValue(typeof(T), out var cachedObjects))
@@ -456,6 +525,9 @@ namespace LethalMod
             }
         }
 
+        /// <summary>
+        /// Processes and draws ESP for players.
+        /// </summary>
         private void ProcessPlayers()
         {
             if (!objectCache.TryGetValue(typeof(PlayerControllerB), out var cachedPlayers))
@@ -492,6 +564,9 @@ namespace LethalMod
             }
         }
 
+        /// <summary>
+        /// Processes and draws ESP for enemies.
+        /// </summary>
         private void ProcessEnemies()
         {
 
@@ -527,12 +602,24 @@ namespace LethalMod
             }
         }
 
+        /// <summary>
+        /// Draws a label on the screen at a given position.
+        /// </summary>
+        /// <param name="screenPosition">The position on the screen to draw the label.</param>
+        /// <param name="text">The text of the label.</param>
+        /// <param name="color">The color of the label.</param>
+        /// <param name="distance">The distance to the object, to be displayed in the label.</param>
         private void DrawLabel(Vector3 screenPosition, string text, Color color, float distance)
         {
             GUI.contentColor = color;
             GUI.Label(new Rect(screenPosition.x, screenPosition.y, 75f, 50f), text + distance + "m");
         }
 
+        /// <summary>
+        /// Gets the color for a given type of object.
+        /// </summary>
+        /// <typeparam name="T">The type of object.</typeparam>
+        /// <returns>The color for the object.</returns>
         private Color GetColorForObject<T>()
         {
             switch (typeof(T).Name)
@@ -554,6 +641,13 @@ namespace LethalMod
             }
         }
 
+        /// <summary>
+        /// Draws a NavMesh path on the screen.
+        /// </summary>
+        /// <typeparam name="T">The type of component the path is for.</typeparam>
+        /// <param name="obj">The object to draw the path to.</param>
+        /// <param name="color">The color of the path.</param>
+        /// <param name="width">The width of the path.</param>
         private void DrawPath<T>(T obj, Color color, float width) where T : Component
         {
             if (!pathCache.TryGetValue(typeof(T), out var cachedObjects))
@@ -591,18 +685,37 @@ namespace LethalMod
         #endregion
     }
 
+    /// <summary>
+    /// A utility class for rendering on the screen.
+    /// </summary>
     public class render : MonoBehaviour
     {
+        /// <summary>
+        /// The style for strings drawn on the screen.
+        /// </summary>
         public static GUIStyle StringStyle { get; set; } = new GUIStyle(GUI.skin.label);
 
+        /// <summary>
+        /// The color for drawing.
+        /// </summary>
         public static Color Color
         {
             get { return GUI.color; }
             set { GUI.color = value; }
         }
 
+        /// <summary>
+        /// A 1x1 texture used for drawing lines.
+        /// </summary>
         public static Texture2D lineTex;
 
+        /// <summary>
+        /// Draws a line between two points on the screen.
+        /// </summary>
+        /// <param name="pointA">The starting point of the line.</param>
+        /// <param name="pointB">The ending point of the line.</param>
+        /// <param name="color">The color of the line.</param>
+        /// <param name="width">The width of the line.</param>
         public static void draw_line(Vector2 pointA, Vector2 pointB, Color color, float width)
         {
             if ((pointA.x > 0 && pointA.x < Screen.width && pointA.y > 0 && pointA.y < Screen.height) ||
