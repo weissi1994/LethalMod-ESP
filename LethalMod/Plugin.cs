@@ -27,12 +27,13 @@ namespace LethalMod
         private static ConfigEntry<bool> isDoorsESPEnabled;
         private static ConfigEntry<bool> isPartialESPEnabled;
 
-        private ConfigEntry<short> config_ColorESP;
-        private ConfigEntry<short> config_ColorESPEnemies;
-        private ConfigEntry<short> config_ColorESPPlayers;
-        private ConfigEntry<short> config_ColorESPDoors;
-        private ConfigEntry<short> config_ColorESPItems;
-        private ConfigEntry<short> config_ColorESPPartial;
+        private static ConfigEntry<Color> config_ColorESPEnemies;
+        private static ConfigEntry<Color> config_ColorESPPlayers;
+        private static ConfigEntry<Color> config_ColorESPDoors;
+        private static ConfigEntry<Color> config_ColorESPItems;
+        private static ConfigEntry<Color> config_ColorESPHazards;
+        private static ConfigEntry<Color> config_ColorESPTerminals;
+        private static ConfigEntry<Color> config_ColorESPPartial;
 
         private float lastToggleTime = 0f;
         private const float toggleCooldown = 0.5f;
@@ -74,6 +75,15 @@ namespace LethalMod
             isPlayerESPEnabled = Config.Bind("ESP", "Enable Players ESP", true, "Enable Players ESP?");
             isDoorsESPEnabled = Config.Bind("ESP", "Enable Doors ESP", true, "Enable Doors ESP?");
             isPartialESPEnabled = Config.Bind("ESP", "Enable Partial ESP", false, "Enable Partial ESP?");
+
+            config_ColorESPEnemies = Config.Bind("Colors", "Enemies", Color.red, "Color for Enemy ESP");
+            config_ColorESPPlayers = Config.Bind("Colors", "Players", Color.green, "Color for Player ESP");
+            config_ColorESPDoors = Config.Bind("Colors", "Doors", Color.cyan, "Color for Door ESP");
+            config_ColorESPItems = Config.Bind("Colors", "Items", Color.blue, "Color for Item ESP");
+            config_ColorESPHazards = Config.Bind("Colors", "Hazards", Color.magenta, "Color for Hazard ESP (Landmines, Turrets, Steam Valves)");
+            config_ColorESPTerminals = Config.Bind("Colors", "Terminals", Color.magenta, "Color for Terminal ESP");
+            config_ColorESPPartial = Config.Bind("Colors", "Partial Paths", Color.yellow, "Color for partial path ESP");
+
             keybinds = new string[10];
             config_KeyESP = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Enable ESP", "3", (ConfigDescription)null);
             keybinds[0] = config_KeyESP.Value.Replace(" ", "");
@@ -481,7 +491,7 @@ namespace LethalMod
                         string label = player.playerUsername + " ";
                         float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, player.transform.position);
                         distance = (float)Math.Round(distance);
-                        DrawLabel(screen, label, Color.green, distance);
+                        DrawLabel(screen, label, config_ColorESPPlayers.Value, distance);
                     }
                 }
                 catch (NullReferenceException e)
@@ -515,7 +525,7 @@ namespace LethalMod
                             label = enemyAI.enemyType.enemyName + " ";
                         float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.transform.position);
                         distance = (float)Math.Round(distance);
-                        DrawLabel(screen, label, Color.red, distance);
+                        DrawLabel(screen, label, config_ColorESPEnemies.Value, distance);
                         //DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 2f);
                     }
                 }
@@ -538,17 +548,17 @@ namespace LethalMod
             switch (typeof(T).Name)
             {
                 case "EntranceTeleport":
-                    return Color.cyan;
+                    return config_ColorESPDoors.Value;
                 case "GrabbableObject":
-                    return Color.blue;
+                    return config_ColorESPItems.Value;
                 case "Landmine":
-                    return Color.red;
+                    return config_ColorESPHazards.Value;
                 case "Turret":
-                    return Color.red;
+                    return config_ColorESPHazards.Value;
                 case "SteamValveHazard":
-                    return Color.magenta;
+                    return config_ColorESPHazards.Value;
                 case "Terminal":
-                    return Color.magenta;
+                    return config_ColorESPTerminals.Value;
                 default:
                     return Color.white;
             }
@@ -583,7 +593,7 @@ namespace LethalMod
                 {
                     var screen_pos = world_to_screen(cachedPath.corners[i]);
                     next = new Vector2(screen_pos.x, screen_pos.y);
-                    render.draw_line(previous, next, Color.yellow, width);
+                    render.draw_line(previous, next, config_ColorESPPartial.Value, width);
                     previous = next;
                 }
             }
