@@ -27,6 +27,8 @@ namespace LethalMod
         private static ConfigEntry<bool> isDoorsESPEnabled;
         private static ConfigEntry<bool> isPartialESPEnabled;
 
+        private ConfigEntry<int> config_FontSize;
+
         // RGB color configs (0-255 range)
         private ConfigEntry<int> config_ColorEnemyR;
         private ConfigEntry<int> config_ColorEnemyG;
@@ -116,6 +118,7 @@ namespace LethalMod
         private void ConfigFile()
         {
             isUIEnabled = Config.Bind("UI", "Enable UI", true, "Enable UI?");
+            config_FontSize = Config.Bind("UI", "Font Size", 12, "Font size for ESP labels (default: 12, recommended for 4K: 18-24)");
             isESPEnabled = Config.Bind("ESP", "Enable ESP", true, "Enable ESP?");
             isEnemyESPEnabled = Config.Bind("ESP", "Enable Enemy ESP", true, "Enable Enemy ESP?");
             isItemsESPEnabled = Config.Bind("ESP", "Enable Items ESP", true, "Enable Items ESP?");
@@ -407,6 +410,10 @@ namespace LethalMod
 
         public void OnGUI()
         {
+            // Save original font size and apply configured size
+            int originalFontSize = GUI.skin.label.fontSize;
+            GUI.skin.label.fontSize = config_FontSize.Value;
+
             if (isUIEnabled.Value)
             {
                 var label_text_tmp = isUIEnabled.Value == true ? "On" : "Off";
@@ -461,6 +468,9 @@ namespace LethalMod
                     ProcessObjects<Turret>((turret, vector) => "TURRET ");
                 }
             }
+
+            // Restore original font size
+            GUI.skin.label.fontSize = originalFontSize;
         }
 
         private Vector3 world_to_screen(Vector3 world)

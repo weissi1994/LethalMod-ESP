@@ -16,6 +16,14 @@ ESP Mod with pathfinding capabilities.
 > [Keybindings]
 > Toggle UI =
 > ```
+>
+> **Font Size Configuration:** Adjust the font size in `config/LethalMod.cfg` under the `[UI]` section:
+> ```ini
+> [UI]
+> ## Font size for ESP labels (default: 12, recommended for 4K: 18-24)
+> Font Size = 12
+> ```
+> For 4K displays, values between 18-24 are recommended for better readability.
 
 - Hit `p` to Toggle UI for ESP (default: Enabled)
 - Hit `3` to Toggle ESP in general (default: Enabled)
