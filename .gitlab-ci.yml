@@ -1,7 +1,7 @@
 stages:
   - build
 
-release:
+build:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:latest
   script:
@@ -9,3 +9,17 @@ release:
   artifacts:
     paths:
       - ./release/LethalMod.dll
+
+release:
+  stage: build
+  image: busybox:latest
+  needs:
+    - job: build
+      artifacts: true
+  script:
+    - mv ./release/LethalMod.dll ./LethalMod.dll
+    - cp ./LethalMod/Plugin.cs ./Source.cs
+    - zip LethalMod_${CI_COMMIT_TAG}.zip ./LethalMod.dll ./icon.png ./manifest.json ./README.md ./Source.cs
+  artifacts:
+    paths:
+      - ./*.zip
