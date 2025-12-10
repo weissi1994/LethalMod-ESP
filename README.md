@@ -24,12 +24,59 @@ ESP Mod with pathfinding capabilities.
 
 **Features:**
 
-- Monsters/Landmines/Turrets (Red)
-- Items (Blue)
-- Players (Green)
-- Exits (Cyan)
+- Monsters/Landmines/Turrets (Red by default)
+- Items (Blue by default)
+- Players (Green by default)
+- Exits (Cyan by default)
+- Terminals (Magenta by default)
+- Partial/Incomplete paths (Yellow by default)
 
-> Yellow paths indicate unreachable targets
+**Customizable Colors:**
+
+All ESP colors can be customized in `config/LethalMod.cfg` under the `[Colors]` section using RGB values (0-255). This is especially helpful for colorblind users or for better visibility.
+
+Example configuration:
+```ini
+[Colors]
+# Enemy/Hazard Colors (Landmines, Turrets, Enemies)
+Enemy Red = 255
+Enemy Green = 0
+Enemy Blue = 0
+
+# Item Colors
+Item Red = 0
+Item Green = 0
+Item Blue = 255
+
+# Player Colors
+Player Red = 0
+Player Green = 255
+Player Blue = 0
+
+# Exit Colors
+Exit Red = 0
+Exit Green = 255
+Exit Blue = 255
+
+# Hazard Colors (Landmines, Turrets, Steam Valves)
+Hazard Red = 255
+Hazard Green = 0
+Hazard Blue = 0
+
+# Terminal Colors
+Terminal Red = 255
+Terminal Green = 0
+Terminal Blue = 255
+
+# Partial Path Colors (incomplete/unreachable paths)
+Partial Path Red = 255
+Partial Path Green = 255
+Partial Path Blue = 0
+```
+
+> **Note:** To make colors more visible for colorblindness, try:
+> - Protanopia/Deuteranopia: Use blue (0, 0, 255) and yellow (255, 255, 0) instead of red and green
+> - Tritanopia: Use red (255, 0, 0) and cyan (0, 255, 255) with higher saturation
 
 ## Tested with:
 

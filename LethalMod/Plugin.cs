@@ -27,12 +27,43 @@ namespace LethalMod
         private static ConfigEntry<bool> isDoorsESPEnabled;
         private static ConfigEntry<bool> isPartialESPEnabled;
 
-        private ConfigEntry<short> config_ColorESP;
-        private ConfigEntry<short> config_ColorESPEnemies;
-        private ConfigEntry<short> config_ColorESPPlayers;
-        private ConfigEntry<short> config_ColorESPDoors;
-        private ConfigEntry<short> config_ColorESPItems;
-        private ConfigEntry<short> config_ColorESPPartial;
+        // RGB color configs (0-255 range)
+        private ConfigEntry<int> config_ColorEnemyR;
+        private ConfigEntry<int> config_ColorEnemyG;
+        private ConfigEntry<int> config_ColorEnemyB;
+
+        private ConfigEntry<int> config_ColorPlayerR;
+        private ConfigEntry<int> config_ColorPlayerG;
+        private ConfigEntry<int> config_ColorPlayerB;
+
+        private ConfigEntry<int> config_ColorItemR;
+        private ConfigEntry<int> config_ColorItemG;
+        private ConfigEntry<int> config_ColorItemB;
+
+        private ConfigEntry<int> config_ColorExitR;
+        private ConfigEntry<int> config_ColorExitG;
+        private ConfigEntry<int> config_ColorExitB;
+
+        private ConfigEntry<int> config_ColorHazardR;
+        private ConfigEntry<int> config_ColorHazardG;
+        private ConfigEntry<int> config_ColorHazardB;
+
+        private ConfigEntry<int> config_ColorTerminalR;
+        private ConfigEntry<int> config_ColorTerminalG;
+        private ConfigEntry<int> config_ColorTerminalB;
+
+        private ConfigEntry<int> config_ColorPartialR;
+        private ConfigEntry<int> config_ColorPartialG;
+        private ConfigEntry<int> config_ColorPartialB;
+
+        // Cached colors
+        private Color enemyColor;
+        private Color playerColor;
+        private Color itemColor;
+        private Color exitColor;
+        private Color hazardColor;
+        private Color terminalColor;
+        private Color partialColor;
 
         private float lastToggleTime = 0f;
         private const float toggleCooldown = 0.5f;
@@ -95,6 +126,49 @@ namespace LethalMod
             keybinds[8] = config_KeyCloseAllDoors.Value.Replace(" ", "");
             config_KeyUI = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Toggle UI", "p", (ConfigDescription)null);
             keybinds[9] = config_KeyUI.Value.Replace(" ", "");
+
+            // Color configurations (RGB 0-255)
+            config_ColorEnemyR = Config.Bind("Colors", "Enemy Red", 255, "Red component (0-255) for Enemy ESP");
+            config_ColorEnemyG = Config.Bind("Colors", "Enemy Green", 0, "Green component (0-255) for Enemy ESP");
+            config_ColorEnemyB = Config.Bind("Colors", "Enemy Blue", 0, "Blue component (0-255) for Enemy ESP");
+
+            config_ColorPlayerR = Config.Bind("Colors", "Player Red", 0, "Red component (0-255) for Player ESP");
+            config_ColorPlayerG = Config.Bind("Colors", "Player Green", 255, "Green component (0-255) for Player ESP");
+            config_ColorPlayerB = Config.Bind("Colors", "Player Blue", 0, "Blue component (0-255) for Player ESP");
+
+            config_ColorItemR = Config.Bind("Colors", "Item Red", 0, "Red component (0-255) for Item ESP");
+            config_ColorItemG = Config.Bind("Colors", "Item Green", 0, "Green component (0-255) for Item ESP");
+            config_ColorItemB = Config.Bind("Colors", "Item Blue", 255, "Blue component (0-255) for Item ESP");
+
+            config_ColorExitR = Config.Bind("Colors", "Exit Red", 0, "Red component (0-255) for Exit ESP");
+            config_ColorExitG = Config.Bind("Colors", "Exit Green", 255, "Green component (0-255) for Exit ESP");
+            config_ColorExitB = Config.Bind("Colors", "Exit Blue", 255, "Blue component (0-255) for Exit ESP");
+
+            config_ColorHazardR = Config.Bind("Colors", "Hazard Red", 255, "Red component (0-255) for Hazard ESP (Landmine/Turret/SteamValve)");
+            config_ColorHazardG = Config.Bind("Colors", "Hazard Green", 0, "Green component (0-255) for Hazard ESP (Landmine/Turret/SteamValve)");
+            config_ColorHazardB = Config.Bind("Colors", "Hazard Blue", 0, "Blue component (0-255) for Hazard ESP (Landmine/Turret/SteamValve)");
+
+            config_ColorTerminalR = Config.Bind("Colors", "Terminal Red", 255, "Red component (0-255) for Terminal ESP");
+            config_ColorTerminalG = Config.Bind("Colors", "Terminal Green", 0, "Green component (0-255) for Terminal ESP");
+            config_ColorTerminalB = Config.Bind("Colors", "Terminal Blue", 255, "Blue component (0-255) for Terminal ESP");
+
+            config_ColorPartialR = Config.Bind("Colors", "Partial Path Red", 255, "Red component (0-255) for Partial Path ESP");
+            config_ColorPartialG = Config.Bind("Colors", "Partial Path Green", 255, "Green component (0-255) for Partial Path ESP");
+            config_ColorPartialB = Config.Bind("Colors", "Partial Path Blue", 0, "Blue component (0-255) for Partial Path ESP");
+
+            // Initialize cached colors
+            UpdateColors();
+        }
+
+        private void UpdateColors()
+        {
+            enemyColor = new Color(config_ColorEnemyR.Value / 255f, config_ColorEnemyG.Value / 255f, config_ColorEnemyB.Value / 255f);
+            playerColor = new Color(config_ColorPlayerR.Value / 255f, config_ColorPlayerG.Value / 255f, config_ColorPlayerB.Value / 255f);
+            itemColor = new Color(config_ColorItemR.Value / 255f, config_ColorItemG.Value / 255f, config_ColorItemB.Value / 255f);
+            exitColor = new Color(config_ColorExitR.Value / 255f, config_ColorExitG.Value / 255f, config_ColorExitB.Value / 255f);
+            hazardColor = new Color(config_ColorHazardR.Value / 255f, config_ColorHazardG.Value / 255f, config_ColorHazardB.Value / 255f);
+            terminalColor = new Color(config_ColorTerminalR.Value / 255f, config_ColorTerminalG.Value / 255f, config_ColorTerminalB.Value / 255f);
+            partialColor = new Color(config_ColorPartialR.Value / 255f, config_ColorPartialG.Value / 255f, config_ColorPartialB.Value / 255f);
         }
 
         #region Cache
@@ -481,7 +555,7 @@ namespace LethalMod
                         string label = player.playerUsername + " ";
                         float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, player.transform.position);
                         distance = (float)Math.Round(distance);
-                        DrawLabel(screen, label, Color.green, distance);
+                        DrawLabel(screen, label, playerColor, distance);
                     }
                 }
                 catch (NullReferenceException e)
@@ -515,7 +589,7 @@ namespace LethalMod
                             label = enemyAI.enemyType.enemyName + " ";
                         float distance = Vector3.Distance(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.position, enemyAI.transform.position);
                         distance = (float)Math.Round(distance);
-                        DrawLabel(screen, label, Color.red, distance);
+                        DrawLabel(screen, label, enemyColor, distance);
                         //DrawPath(enemyAI.transform.position, GameNetworkManager.Instance.localPlayerController.transform.position, Color.red, 2f);
                     }
                 }
@@ -538,17 +612,17 @@ namespace LethalMod
             switch (typeof(T).Name)
             {
                 case "EntranceTeleport":
-                    return Color.cyan;
+                    return exitColor;
                 case "GrabbableObject":
-                    return Color.blue;
+                    return itemColor;
                 case "Landmine":
-                    return Color.red;
+                    return hazardColor;
                 case "Turret":
-                    return Color.red;
+                    return hazardColor;
                 case "SteamValveHazard":
-                    return Color.magenta;
+                    return hazardColor;
                 case "Terminal":
-                    return Color.magenta;
+                    return terminalColor;
                 default:
                     return Color.white;
             }
@@ -583,7 +657,7 @@ namespace LethalMod
                 {
                     var screen_pos = world_to_screen(cachedPath.corners[i]);
                     next = new Vector2(screen_pos.x, screen_pos.y);
-                    render.draw_line(previous, next, Color.yellow, width);
+                    render.draw_line(previous, next, partialColor, width);
                     previous = next;
                 }
             }
