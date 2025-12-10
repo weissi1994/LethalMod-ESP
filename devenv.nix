@@ -6,6 +6,9 @@
   packages = [ pkgs.git ];
 
   languages.dotnet.enable = true;
+  scripts.build.exec = ''
+    dotnet build -o release -c Release LethalMod.sln
+  '';
 
   pre-commit.hooks = {
     check-merge-conflicts.enable = true;
