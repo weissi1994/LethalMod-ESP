@@ -9,7 +9,13 @@ ESP Mod with pathfinding capabilities.
 
 **Controls:**
 
-> can be configured in `config/LethalMod.cfg`
+> All keybindings can be configured in `config/LethalMod.cfg` under the `[Keybindings]` section.
+>
+> **To unbind a key:** Set its value to an empty string or whitespace in the config file. For example:
+> ```ini
+> [Keybindings]
+> Toggle UI =
+> ```
 
 - Hit `p` to Toggle UI for ESP (default: Enabled)
 - Hit `3` to Toggle ESP in general (default: Enabled)

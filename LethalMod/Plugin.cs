@@ -83,7 +83,24 @@ namespace LethalMod
 
         private bool IsKeyDown(string key)
         {
-            return InputControlExtensions.IsPressed(((InputControl)Keyboard.current)[key], 0f);
+            // Allow unbinding keys by setting them to empty/whitespace
+            if (string.IsNullOrWhiteSpace(key))
+                return false;
+
+            try
+            {
+                // Attempt to get the key control - may be null for invalid key names
+                var keyControl = ((InputControl)Keyboard.current)[key];
+                if (keyControl == null)
+                    return false;
+
+                return InputControlExtensions.IsPressed(keyControl, 0f);
+            }
+            catch (System.Exception)
+            {
+                // Silently ignore invalid key names
+                return false;
+            }
         }
         #endregion
 
