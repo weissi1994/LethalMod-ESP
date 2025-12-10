@@ -227,7 +227,8 @@ namespace LethalMod
             }
             catch (Exception e)
             {
-                Logger.LogError($"Failed to calculate paths: {e.Message}");
+                // Use debug level to avoid spam during game state transitions (lobby, loading, etc.)
+                Logger.LogDebug($"Failed to calculate paths: {e.Message}");
             }
             //CachePaths<PlayerControllerB>();
             //CachePaths<EnemyAI>();
@@ -264,12 +265,24 @@ namespace LethalMod
             agent.nextPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
             agent.enabled = false;
             agent.enabled = true;
+
+            // Check if agent is properly placed on NavMesh before attempting path calculations
+            if (!agent.isOnNavMesh)
+            {
+                Logger.LogDebug($"NavMeshAgent is not on NavMesh, skipping path calculation for {typeof(T)}");
+                return;
+            }
+
             NavMeshPath path;
 
             foreach (T obj in cachedObjects.Cast<T>())
             {
                 try
                 {
+                    // Skip if object is null or destroyed
+                    if (obj == null || obj.transform == null)
+                        continue;
+
                     path = new NavMeshPath();
                     Vector3 target_pos = obj.transform.position;
 
@@ -277,7 +290,10 @@ namespace LethalMod
                         target_pos.y = target_pos.y - 1.5f;
                     if (obj is GrabbableObject && obj.name.Contains("Apparatus"))
                         target_pos.y = target_pos.y - 3;
+
+                    // CalculatePath can fail if NavMesh is not loaded or agent is not valid
                     agent.CalculatePath(target_pos, path);
+
                     if (path.corners.Length < 3) //if the path has 1 or no corners, there is no need
                         continue;
                     if (path.status == NavMeshPathStatus.PathComplete)
@@ -289,9 +305,10 @@ namespace LethalMod
                         pathCache[typeof(T)][obj] = path;
                     }
                 }
-                catch (NullReferenceException e)
+                catch (Exception)
                 {
-                    // Logger.LogError($"Failed to calculate path for {obj.name}:\n{e.Message}");
+                    // Silently ignore errors during path calculation (NavMesh might not be loaded, agent might not be valid, etc.)
+                    // This prevents log spam during game state transitions
                     continue;
                 }
             }
