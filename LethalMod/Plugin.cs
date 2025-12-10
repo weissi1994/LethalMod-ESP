@@ -28,6 +28,8 @@ namespace LethalMod
         private static ConfigEntry<bool> isPartialESPEnabled;
 
         private ConfigEntry<int> config_FontSize;
+        private ConfigEntry<int> config_MaxTrackedItems;
+        private ConfigEntry<int> config_MaxTrackedEnemies;
 
         // RGB color configs (0-255 range)
         private ConfigEntry<int> config_ColorEnemyR;
@@ -125,6 +127,11 @@ namespace LethalMod
             isPlayerESPEnabled = Config.Bind("ESP", "Enable Players ESP", true, "Enable Players ESP?");
             isDoorsESPEnabled = Config.Bind("ESP", "Enable Doors ESP", true, "Enable Doors ESP?");
             isPartialESPEnabled = Config.Bind("ESP", "Enable Partial ESP", false, "Enable Partial ESP?");
+
+            // Performance settings
+            config_MaxTrackedItems = Config.Bind("Performance", "Max Tracked Items", -1, "Maximum number of items to track (-1 = unlimited, recommended for large maps: 50-100)");
+            config_MaxTrackedEnemies = Config.Bind("Performance", "Max Tracked Enemies", -1, "Maximum number of enemies to track (-1 = unlimited, recommended for large maps: 20-30)");
+
             keybinds = new string[10];
             config_KeyESP = ((BaseUnityPlugin)this).Config.Bind<string>("Keybindings", "Enable ESP", "3", (ConfigDescription)null);
             keybinds[0] = config_KeyESP.Value.Replace(" ", "");
@@ -236,7 +243,41 @@ namespace LethalMod
 
         void CacheObjects<T>() where T : Component
         {
-            objectCache[typeof(T)] = new List<Component>(FindObjectsOfType<T>());
+            var allObjects = FindObjectsOfType<T>();
+            List<Component> objectsToCache = new List<Component>(allObjects);
+
+            // Apply distance-based filtering if limits are configured
+            if (GameNetworkManager.Instance?.localPlayerController != null)
+            {
+                int limit = -1;
+                bool shouldLimit = false;
+
+                // Check if this type has a limit configured
+                if (typeof(T) == typeof(GrabbableObject) && config_MaxTrackedItems.Value > 0)
+                {
+                    limit = config_MaxTrackedItems.Value;
+                    shouldLimit = true;
+                }
+                else if (typeof(T) == typeof(EnemyAI) && config_MaxTrackedEnemies.Value > 0)
+                {
+                    limit = config_MaxTrackedEnemies.Value;
+                    shouldLimit = true;
+                }
+
+                // Sort by distance and take only the closest N objects
+                if (shouldLimit && allObjects.Length > limit)
+                {
+                    Vector3 playerPos = GameNetworkManager.Instance.localPlayerController.transform.position;
+                    objectsToCache = allObjects
+                        .OrderBy(obj => Vector3.Distance(playerPos, obj.transform.position))
+                        .Take(limit)
+                        .Cast<Component>()
+                        .ToList();
+                    Logger.LogDebug($"Limited {typeof(T)} from {allObjects.Length} to {objectsToCache.Count} closest objects");
+                }
+            }
+
+            objectCache[typeof(T)] = objectsToCache;
             if (objectCache[typeof(T)].Count > 0)
                 Logger.LogInfo($"Cached {objectCache[typeof(T)].Count} objects of type {typeof(T)}.");
         }

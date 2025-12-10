@@ -92,6 +92,27 @@ Partial Path Blue = 0
 > - Protanopia/Deuteranopia: Use blue (0, 0, 255) and yellow (255, 255, 0) instead of red and green
 > - Tritanopia: Use red (255, 0, 0) and cyan (0, 255, 255) with higher saturation
 
+**Performance Configuration:**
+
+If you experience performance issues on large maps with many items or enemies, you can limit the number of tracked entities. The mod will automatically track only the closest entities to you.
+
+Configure limits in `config/LethalMod.cfg` under the `[Performance]` section:
+```ini
+[Performance]
+## Maximum number of items to track (-1 = unlimited, recommended for large maps: 50-100)
+Max Tracked Items = -1
+
+## Maximum number of enemies to track (-1 = unlimited, recommended for large maps: 20-30)
+Max Tracked Enemies = -1
+```
+
+**How it works:**
+- When a limit is set, the mod sorts all entities by distance to you
+- Only the closest N entities are tracked and rendered
+- The cache updates every 2.5 seconds, so the tracked entities will change as you move
+- Set to `-1` (default) for unlimited tracking
+- Recommended values for large maps: 50-100 items, 20-30 enemies
+
 ## Tested with:
 
 - https://thunderstore.io/c/lethal-company/p/LethalMinors/Multiplayer_Modpack/
