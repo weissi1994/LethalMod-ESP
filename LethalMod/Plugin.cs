@@ -279,7 +279,7 @@ namespace LethalMod
 
             objectCache[typeof(T)] = objectsToCache;
             if (objectCache[typeof(T)].Count > 0)
-                Logger.LogInfo($"Cached {objectCache[typeof(T)].Count} objects of type {typeof(T)}.");
+                Logger.LogDebug($"Cached {objectCache[typeof(T)].Count} objects of type {typeof(T)}.");
         }
 
         void CachePaths<T>() where T : Component
@@ -293,14 +293,31 @@ namespace LethalMod
             if (!objectCache.TryGetValue(typeof(T), out var cachedObjects))
                 return;
 
+            // Check if NavMesh exists before trying to create/use NavMeshAgent
+            NavMeshHit navHit;
+            Vector3 playerPos = GameNetworkManager.Instance.localPlayerController.transform.position;
+            if (!NavMesh.SamplePosition(playerPos, out navHit, 5f, NavMesh.AllAreas))
+            {
+                Logger.LogDebug($"No NavMesh found near player position, skipping path calculation for {typeof(T)}");
+                return;
+            }
+
             NavMeshAgent agent = GameNetworkManager.Instance.localPlayerController.gameObject.GetComponent<NavMeshAgent>();
             if (agent == null)
             {
-                Logger.LogInfo("Attaching NavMeshAgent to Player");
-                agent = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<NavMeshAgent>();
-                agent.updatePosition = false;
-                agent.updateRotation = false;
-                agent.updateUpAxis = false;
+                try
+                {
+                    Logger.LogDebug("Attaching NavMeshAgent to Player");
+                    agent = GameNetworkManager.Instance.localPlayerController.gameObject.AddComponent<NavMeshAgent>();
+                    agent.updatePosition = false;
+                    agent.updateRotation = false;
+                    agent.updateUpAxis = false;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogDebug($"Failed to create NavMeshAgent: {e.Message}");
+                    return;
+                }
             }
             agent.transform.position = GameNetworkManager.Instance.localPlayerController.transform.position;
             agent.nextPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
