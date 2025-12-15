@@ -246,6 +246,27 @@ namespace LethalMod
             var allObjects = FindObjectsOfType<T>();
             List<Component> objectsToCache = new List<Component>(allObjects);
 
+            // Skip items on the ship for GrabbableObject to reduce lag
+            if (typeof(T) == typeof(GrabbableObject))
+            {
+                int originalCount = allObjects.Length;
+                objectsToCache = allObjects
+                    .Where(obj => {
+                        var grabbable = obj as GrabbableObject;
+                        // Skip items that are on the ship, pocketed, or held
+                        return grabbable != null &&
+                               !grabbable.isInShipRoom &&
+                               !grabbable.isPocketed &&
+                               !grabbable.isHeld;
+                    })
+                    .Cast<Component>()
+                    .ToList();
+
+                int skippedCount = originalCount - objectsToCache.Count;
+                if (skippedCount > 0)
+                    Logger.LogDebug($"Skipped {skippedCount} items on ship (from {originalCount} total items)");
+            }
+
             // Apply distance-based filtering if limits are configured
             if (GameNetworkManager.Instance?.localPlayerController != null)
             {
@@ -265,13 +286,12 @@ namespace LethalMod
                 }
 
                 // Sort by distance and take only the closest N objects
-                if (shouldLimit && allObjects.Length > limit)
+                if (shouldLimit && objectsToCache.Count > limit)
                 {
                     Vector3 playerPos = GameNetworkManager.Instance.localPlayerController.transform.position;
-                    objectsToCache = allObjects
+                    objectsToCache = objectsToCache
                         .OrderBy(obj => Vector3.Distance(playerPos, obj.transform.position))
                         .Take(limit)
-                        .Cast<Component>()
                         .ToList();
                     Logger.LogDebug($"Limited {typeof(T)} from {allObjects.Length} to {objectsToCache.Count} closest objects");
                 }
